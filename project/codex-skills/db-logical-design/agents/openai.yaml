@@ -1,0 +1,7 @@
+interface:
+  display_name: "数据库逻辑结构设计"
+  short_description: "把E-R模型转换为MySQL关系模式、字段约束和范式说明"
+  default_prompt: "Use $db-logical-design to convert an E-R model into MySQL table designs."
+
+policy:
+  allow_implicit_invocation: true

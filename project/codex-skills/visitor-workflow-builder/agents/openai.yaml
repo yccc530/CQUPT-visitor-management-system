@@ -1,0 +1,7 @@
+interface:
+  display_name: "访客流程实现"
+  short_description: "实现访客预约、审批、入校、离校的核心状态流转"
+  default_prompt: "Use $visitor-workflow-builder to implement the visitor approval and access workflow."
+
+policy:
+  allow_implicit_invocation: true

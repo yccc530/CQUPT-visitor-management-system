@@ -1,0 +1,7 @@
+interface:
+  display_name: "MySQL 建表与查询"
+  short_description: "生成MySQL建表脚本、初始化数据和报告用典型查询"
+  default_prompt: "Use $mysql-schema-and-query to generate MySQL schema, seed data, and course-report SQL queries."
+
+policy:
+  allow_implicit_invocation: true

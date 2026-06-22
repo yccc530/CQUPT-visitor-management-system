@@ -1,0 +1,7 @@
+interface:
+  display_name: "数据库课设报告撰写"
+  short_description: "整合数据库设计材料，撰写可提交的课程设计报告"
+  default_prompt: "Use $db-course-report-writer to write the final database course design report."
+
+policy:
+  allow_implicit_invocation: true

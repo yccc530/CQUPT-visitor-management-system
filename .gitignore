@@ -1,0 +1,59 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Java / Spring Boot
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/wrapper/maven-wrapper.jar
+
+# Node / Vue
+node_modules/
+dist/
+build/
+.vite/
+.nuxt/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.yaml
+application-local.properties
+
+# Database local files
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.dump
+
+# Python tooling used by Codex or local scripts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+

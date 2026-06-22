@@ -1,0 +1,7 @@
+interface:
+  display_name: "系统测试与联调"
+  short_description: "测试系统核心流程、联调前后端并输出测试文档"
+  default_prompt: "Use $system-testing-debugging to test and debug the visitor management system."
+
+policy:
+  allow_implicit_invocation: true

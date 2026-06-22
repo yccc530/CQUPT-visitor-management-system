@@ -1,0 +1,7 @@
+interface:
+  display_name: "统计报表构建"
+  short_description: "实现访客统计报表所需SQL、后端接口和前端展示"
+  default_prompt: "Use $statistics-report-builder to implement visitor statistics reports."
+
+policy:
+  allow_implicit_invocation: true

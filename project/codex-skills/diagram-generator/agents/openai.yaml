@@ -1,0 +1,7 @@
+interface:
+  display_name: "系统设计图生成"
+  short_description: "生成数据库课设报告所需的Mermaid或PlantUML图形"
+  default_prompt: "Use $diagram-generator to create diagrams for a database course design report."
+
+policy:
+  allow_implicit_invocation: true

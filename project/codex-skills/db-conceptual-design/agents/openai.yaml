@@ -1,0 +1,7 @@
+interface:
+  display_name: "数据库概念结构设计"
+  short_description: "从需求提取实体、属性和联系并生成可入报告的E-R设计"
+  default_prompt: "Use $db-conceptual-design to design entities, relationships, and an E-R diagram."
+
+policy:
+  allow_implicit_invocation: true

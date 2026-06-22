@@ -1,0 +1,7 @@
+interface:
+  display_name: "项目最终整合"
+  short_description: "最终核对代码、数据库、图表和文档并整理提交版本"
+  default_prompt: "Use $project-final-integrator to integrate and verify the final course project."
+
+policy:
+  allow_implicit_invocation: true
