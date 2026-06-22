@@ -57,3 +57,6 @@ __pycache__/
 .venv/
 venv/
 
+
+# Microsoft Office temporary files
+~$*.docx

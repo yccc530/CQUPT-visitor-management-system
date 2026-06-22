@@ -1,0 +1,7 @@
+interface:
+  display_name: "演示数据生成"
+  short_description: "生成覆盖全部页面、流程、权限和统计图表的高质量演示数据"
+  default_prompt: "Use $demo-data-generator-skill to generate rich seed data for the visitor management system."
+
+policy:
+  allow_implicit_invocation: true

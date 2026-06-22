@@ -1,0 +1,4 @@
+interface:
+  display_name: "全栈联调一致性检查"
+  short_description: "检查并修复前端字段、后端接口和数据库表字段不一致问题"
+  default_prompt: "Use $fullstack-integration-skill to align frontend APIs, backend endpoints, and database fields."

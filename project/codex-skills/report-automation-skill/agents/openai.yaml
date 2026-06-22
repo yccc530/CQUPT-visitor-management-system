@@ -1,0 +1,4 @@
+interface:
+  display_name: "报告自动生成"
+  short_description: "读取文档、SQL、图表和截图，自动生成课程设计报告"
+  default_prompt: "Use $report-automation-skill to generate the database course design report automatically."
