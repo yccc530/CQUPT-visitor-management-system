@@ -1,0 +1,201 @@
+erDiagram
+  DEPARTMENT ||--o{ SYS_USER : contains
+  SYS_USER ||--o{ SYS_USER_ROLE : assigned
+  SYS_ROLE ||--o{ SYS_USER_ROLE : includes
+  SYS_ROLE ||--o{ SYS_ROLE_PERMISSION : grants
+  SYS_PERMISSION ||--o{ SYS_ROLE_PERMISSION : included
+
+  VISITOR ||--o{ VISITOR_VEHICLE : owns
+  VISITOR ||--o{ VISIT_APPLY : submits
+  SYS_USER ||--o{ VISIT_APPLY : hosts
+  DEPARTMENT ||--o{ VISIT_APPLY : manages
+  VISITOR_VEHICLE ||--o{ VISIT_APPLY : used_by
+  VISIT_APPLY ||--o{ VISITOR_COMPANION : includes
+  VISIT_APPLY ||--o{ APPROVAL_RECORD : produces
+  SYS_USER ||--o{ APPROVAL_RECORD : approves
+  VISIT_APPLY ||--o| PASS_CODE : generates
+  VISIT_APPLY ||--o{ ACCESS_RECORD : creates
+  PASS_CODE ||--o{ ACCESS_RECORD : verifies
+  CAMPUS_GATE ||--o{ ACCESS_RECORD : entry_gate
+  CAMPUS_GATE ||--o{ ACCESS_RECORD : exit_gate
+  SYS_USER ||--o{ ACCESS_RECORD : guard_handles
+  VISITOR ||--o{ BLACKLIST : may_have
+  SYS_USER ||--o{ BLACKLIST : operates
+  SYS_USER ||--o{ NOTICE : receives
+  SYS_USER ||--o{ OPERATION_LOG : writes
+  DICT_TYPE ||--o{ DICT_ITEM : contains
+  SYS_USER ||--o{ SCREENSHOT_RECORD : captures
+  SYS_USER ||--o{ REPORT_RECORD : generates
+
+  DEPARTMENT {
+    bigint id PK
+    bigint parent_id
+    string dept_code
+    string dept_name
+    bigint leader_user_id
+    string status
+  }
+  SYS_USER {
+    bigint id PK
+    string username
+    string password_hash
+    string real_name
+    string phone
+    bigint department_id FK
+    string user_type
+    string status
+  }
+  SYS_ROLE {
+    bigint id PK
+    string role_code
+    string role_name
+    string role_desc
+    string status
+  }
+  SYS_PERMISSION {
+    bigint id PK
+    string permission_code
+    string permission_name
+    string permission_type
+    bigint parent_id
+    string api_path
+    string status
+  }
+  SYS_USER_ROLE {
+    bigint id PK
+    bigint user_id FK
+    bigint role_id FK
+  }
+  SYS_ROLE_PERMISSION {
+    bigint id PK
+    bigint role_id FK
+    bigint permission_id FK
+  }
+  CAMPUS_GATE {
+    bigint id PK
+    string gate_code
+    string gate_name
+    string gate_location
+    string gate_type
+    string status
+  }
+  VISITOR {
+    bigint id PK
+    string visitor_name
+    string id_type
+    string id_number
+    string phone
+    string unit_name
+    string visitor_type
+  }
+  VISITOR_VEHICLE {
+    bigint id PK
+    bigint visitor_id FK
+    string plate_number
+    string vehicle_type
+    string vehicle_color
+    string status
+  }
+  VISITOR_COMPANION {
+    bigint id PK
+    bigint apply_id FK
+    string companion_name
+    string id_type
+    string id_number
+    string phone
+  }
+  VISIT_APPLY {
+    bigint id PK
+    string apply_no
+    bigint visitor_id FK
+    bigint host_user_id FK
+    bigint department_id FK
+    bigint vehicle_id FK
+    datetime plan_start_time
+    datetime plan_end_time
+    string apply_status
+    string access_status
+  }
+  APPROVAL_RECORD {
+    bigint id PK
+    bigint apply_id FK
+    string approval_step
+    bigint approver_user_id FK
+    string approval_result
+    datetime approval_time
+  }
+  PASS_CODE {
+    bigint id PK
+    bigint apply_id FK
+    string pass_code
+    datetime valid_from
+    datetime valid_to
+    string pass_status
+  }
+  ACCESS_RECORD {
+    bigint id PK
+    bigint apply_id FK
+    bigint visitor_id FK
+    bigint pass_code_id FK
+    bigint entry_gate_id FK
+    bigint exit_gate_id FK
+    datetime entry_time
+    datetime exit_time
+    string access_status
+  }
+  BLACKLIST {
+    bigint id PK
+    bigint visitor_id FK
+    string id_number
+    string phone
+    string reason
+    datetime start_time
+    datetime end_time
+    string status
+  }
+  NOTICE {
+    bigint id PK
+    bigint receiver_user_id FK
+    string title
+    string business_type
+    bigint business_id
+    string read_status
+  }
+  OPERATION_LOG {
+    bigint id PK
+    bigint operator_user_id FK
+    string module_name
+    string operation_type
+    string operation_result
+    datetime operation_time
+  }
+  DICT_TYPE {
+    bigint id PK
+    string dict_code
+    string dict_name
+    string status
+  }
+  DICT_ITEM {
+    bigint id PK
+    bigint dict_type_id FK
+    string item_code
+    string item_label
+    string item_value
+    string status
+  }
+  SCREENSHOT_RECORD {
+    bigint id PK
+    string screenshot_code
+    string page_name
+    string route_path
+    string file_path
+    bigint created_by FK
+  }
+  REPORT_RECORD {
+    bigint id PK
+    string report_code
+    string report_name
+    string markdown_path
+    string word_path
+    bigint generated_by FK
+  }
