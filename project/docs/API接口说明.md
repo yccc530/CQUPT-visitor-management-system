@@ -213,3 +213,103 @@ Authorization: Bearer <token>
 默认测试账号：`admin / 123456`、`teacher01 / 123456`、`approver01 / 123456`、`guard01 / 123456`、`manager01 / 123456`。
 
 无 Token 或 Token 无效返回 `401`，角色无权限返回 `403`。
+## 9. 访客核心流程接口
+
+本节接口均使用统一前缀 `/api/workflow`，返回格式仍为 `ApiResponse<T>`。除登录接口外，请求头均需要携带：
+
+```http
+Authorization: Bearer <token>
+```
+
+| 模块 | 方法 | 路径 | 说明 | 允许角色 |
+|---|---|---|---|---|
+| 预约申请 | POST | `/api/workflow/visit-applies` | 提交预约，自动检查黑名单，创建访客、车辆、随行人员和预约申请 | 系统管理员、访客 |
+| 预约申请 | GET | `/api/workflow/visit-applies/my` | 查询当前角色可见的预约；访客可按手机号或证件号查询本人预约 | 系统管理员、校级管理人员、被访人、部门审批人员、访客 |
+| 预约申请 | GET | `/api/workflow/visit-applies/{id}` | 查询预约详情 | 系统管理员、校级管理人员、被访人、部门审批人员、访客 |
+| 预约申请 | PUT | `/api/workflow/visit-applies/{id}` | 修改待确认、被访人已确认或待部门审批的预约 | 系统管理员、访客 |
+| 预约申请 | POST | `/api/workflow/visit-applies/{id}/cancel` | 取消未审批结束的预约 | 系统管理员、访客 |
+| 被访人确认 | GET | `/api/workflow/host/pending` | 查询待被访人确认的预约 | 系统管理员、被访人 |
+| 被访人确认 | POST | `/api/workflow/host/{id}/confirm` | 被访人确认预约，写入审批记录 | 系统管理员、被访人 |
+| 被访人确认 | POST | `/api/workflow/host/{id}/reject` | 被访人拒绝预约，写入审批记录 | 系统管理员、被访人 |
+| 部门审批 | GET | `/api/workflow/department/pending` | 查询本部门待审批预约 | 系统管理员、部门审批人员 |
+| 部门审批 | POST | `/api/workflow/department/{id}/approve` | 部门审批通过，写入审批记录并生成通行凭证 | 系统管理员、部门审批人员 |
+| 部门审批 | POST | `/api/workflow/department/{id}/reject` | 部门审批拒绝，写入审批记录 | 系统管理员、部门审批人员 |
+| 通行凭证 | GET | `/api/workflow/pass-codes?applyId=1` | 查询审批通过预约的通行凭证 | 系统管理员、访客、门岗安保、校级管理人员 |
+| 门岗核验 | POST | `/api/workflow/gate/verify` | 按预约编号、手机号、证件号或通行码核验是否允许入校 | 系统管理员、门岗安保 |
+| 出入校登记 | POST | `/api/workflow/access/entry` | 核验通过后登记入校 | 系统管理员、门岗安保 |
+| 出入校登记 | POST | `/api/workflow/access/exit` | 已入校访客登记离校，禁止重复离校 | 系统管理员、门岗安保 |
+| 超时未离校 | GET | `/api/workflow/access/overtime?mark=true` | 查询并可标记超时未离校访客 | 系统管理员、门岗安保、校级管理人员 |
+
+### 9.1 提交预约示例
+
+```json
+{
+  "visitorName": "赵明",
+  "idType": "ID_CARD",
+  "idNumber": "500101199912120088",
+  "phone": "13900018888",
+  "company": "重庆数智科技有限公司",
+  "gender": "男",
+  "hostUserId": 2,
+  "departmentId": 2,
+  "visitReason": "参加智慧校园项目沟通会",
+  "planStartTime": "2026-06-22T09:00:00",
+  "planEndTime": "2026-06-22T11:00:00",
+  "vehiclePlateNo": "渝A88K88",
+  "vehicleType": "小型汽车",
+  "companions": [
+    {
+      "companionName": "李娜",
+      "idType": "ID_CARD",
+      "idNumber": "500101199812120066",
+      "phone": "13900016666",
+      "relationRemark": "同事"
+    }
+  ]
+}
+```
+
+成功后 `applyStatus = PENDING_HOST`，`accessStatus = NOT_ENTERED`。
+
+### 9.2 审批请求示例
+
+```json
+{
+  "comment": "来访事由属实，同意进入下一环节"
+}
+```
+
+被访人确认后状态变为 `HOST_CONFIRMED`；部门审批通过后状态变为 `APPROVED`，系统自动生成 `pass_code`。
+
+### 9.3 门岗核验示例
+
+```json
+{
+  "passCode": "PC202606220001",
+  "gateId": 1
+}
+```
+
+也可以使用以下任一条件核验：`applyId`、`applyNo`、`phone`、`idNumber`、`passCode`。核验返回字段包括 `allowed`、`message`、`applyStatus`、`accessStatus`、`validFrom`、`validTo`。未审批、已拒绝、已取消、黑名单、过期凭证、重复入校都会返回 `allowed = false` 和明确原因。
+
+### 9.4 入校和离校示例
+
+入校登记：
+
+```json
+{
+  "applyId": 8,
+  "gateId": 1
+}
+```
+
+离校登记：
+
+```json
+{
+  "applyId": 8,
+  "gateId": 2
+}
+```
+
+入校成功后写入 `access_record.entry_time`，预约访问状态更新为 `ENTERED`。离校成功后写入 `access_record.exit_time`，预约访问状态更新为 `EXITED`。若重复离校，接口返回错误：`该访客已登记离校，不能重复离校`。

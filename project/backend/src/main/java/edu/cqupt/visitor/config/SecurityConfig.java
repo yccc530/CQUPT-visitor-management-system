@@ -42,6 +42,26 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/auth/logout", "/api/auth/me", "/api/auth/menus").authenticated()
 
+                        .requestMatchers(HttpMethod.POST, "/api/workflow/visit-applies", "/api/workflow/visit-applies/*/cancel")
+                        .hasAnyRole("ADMIN", "VISITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/workflow/visit-applies/**")
+                        .hasAnyRole("ADMIN", "SCHOOL_MANAGER", "HOST", "DEPT_APPROVER", "VISITOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/workflow/visit-applies/**")
+                        .hasAnyRole("ADMIN", "VISITOR")
+
+                        .requestMatchers("/api/workflow/host/**")
+                        .hasAnyRole("ADMIN", "HOST")
+                        .requestMatchers("/api/workflow/department/**")
+                        .hasAnyRole("ADMIN", "DEPT_APPROVER")
+                        .requestMatchers(HttpMethod.GET, "/api/workflow/pass-codes")
+                        .hasAnyRole("ADMIN", "VISITOR", "GATE_GUARD", "SCHOOL_MANAGER")
+                        .requestMatchers("/api/workflow/gate/**")
+                        .hasAnyRole("ADMIN", "GATE_GUARD")
+                        .requestMatchers(HttpMethod.POST, "/api/workflow/access/entry", "/api/workflow/access/exit")
+                        .hasAnyRole("ADMIN", "GATE_GUARD")
+                        .requestMatchers(HttpMethod.GET, "/api/workflow/access/overtime")
+                        .hasAnyRole("ADMIN", "GATE_GUARD", "SCHOOL_MANAGER")
+
                         .requestMatchers("/api/sys-users/**", "/api/sys-roles/**", "/api/sys-permissions/**",
                                 "/api/sys-user-roles/**", "/api/sys-role-permissions/**",
                                 "/api/departments/**", "/api/campus-gates/**", "/api/dict-types/**",
