@@ -37,7 +37,7 @@ Generate realistic, coherent seed data that supports every frontend page, backen
 - Ensure all foreign keys and unique constraints are respected.
 - Ensure generated data can produce attractive charts and meaningful screenshots.
 
-## Default Rules For CQUPT Visitor System
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Include departments such as 计算机科学与技术学院, 软件工程学院, 自动化学院, 通信与信息工程学院, 教务处, 保卫处. Include gates such as 南门, 北门, 东门, 西门. Use realistic Chinese names, phone numbers, ID/passport placeholders, car plates, visit reasons, and campus appointment times.
 
 ## References

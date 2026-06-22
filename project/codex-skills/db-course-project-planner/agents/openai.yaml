@@ -1,7 +1,7 @@
 interface:
   display_name: "数据库课程项目规划"
   short_description: "规划数据库课程设计的技术路线、目录结构、阶段任务和交付物"
-  default_prompt: "Use $db-course-project-planner to plan a database course project for a campus visitor management system."
+  default_prompt: "Use $db-course-project-planner to plan a database course project for a 重庆邮电大学智慧访客预约与出入校管理系统."
 
 policy:
   allow_implicit_invocation: true

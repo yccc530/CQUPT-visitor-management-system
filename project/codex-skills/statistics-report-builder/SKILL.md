@@ -39,7 +39,7 @@ Include today, week, and month visitor counts; counts by department; passage cou
 - Make reports suitable for course-design demonstration screenshots.
 - Explain each metric's business meaning and source table.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Use `visit_apply`, `approval_record`, `access_record`, `department`, `gate`, and `blacklist` as primary report sources. Align date filters with appointment time, entry time, or exit time as appropriate.
 
 ## References

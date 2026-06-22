@@ -25,7 +25,7 @@ Assemble a formal database principles course design report from existing design 
 7. Produce a polished Markdown report ready for conversion to Word.
 
 ## Outputs
-- `docs/重庆邮电大学访客管理系统设计报告.md`
+- `docs/重庆邮电大学智慧访客预约与出入校管理系统设计报告.md`
 - `docs/报告素材清单.md`
 - `docs/需要插入的图片清单.md`
 
@@ -36,7 +36,7 @@ Assemble a formal database principles course design report from existing design 
 - Keep diagrams, table structures, relation schemas, functions, and report text consistent.
 - Make the report usable as a final-project draft.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Required sections: system definition, requirement analysis, data flow diagram, data dictionary, conceptual design, E-R diagram, logical design, relation schema, function module diagram, detailed design, SQL query statements and explanations, system implementation, system testing, and conclusion.
 
 ## References

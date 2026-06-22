@@ -39,7 +39,7 @@ Include login, dashboard, appointment application, my appointments, pending appo
 - Show valid operations for each business status.
 - Ensure code can run or clearly document remaining environment steps.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Use Element Plus tables, forms, dialogs, tags, date pickers, and pagination for administrative pages. Use role menus matching visitor, host, department approver, gate security, system administrator, and school manager.
 
 ## References

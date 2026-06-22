@@ -36,7 +36,7 @@ Implement authentication and role-based access control for a course-project web 
 - Document each role and its allowed actions.
 - Use a simplified but coherent course-project implementation when needed.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Default roles: visitor, host, department approver, gate security staff, system administrator, and school-level manager. Map each role to appointment, confirmation, approval, gate verification, entry/exit, blacklist, user management, log, and statistics permissions.
 
 ## References

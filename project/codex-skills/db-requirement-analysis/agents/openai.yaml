@@ -1,7 +1,7 @@
 interface:
   display_name: "数据库需求分析"
   short_description: "生成数据库应用系统的需求分析、业务流程和数据字典初稿"
-  default_prompt: "Use $db-requirement-analysis to write requirement analysis for a campus visitor management system."
+  default_prompt: "Use $db-requirement-analysis to write requirement analysis for a 重庆邮电大学智慧访客预约与出入校管理系统."
 
 policy:
   allow_implicit_invocation: true

@@ -1,7 +1,7 @@
 interface:
   display_name: "Vue 访客系统前端"
   short_description: "生成Vue3与Element Plus前端页面、路由和接口对接"
-  default_prompt: "Use $vue-frontend-builder to build Vue 3 pages for the visitor management system."
+  default_prompt: "Use $vue-frontend-builder to build Vue 3 pages for the CQUPT smart visitor appointment and campus access management system."
 
 policy:
   allow_implicit_invocation: true

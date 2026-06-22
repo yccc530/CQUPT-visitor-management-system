@@ -6,7 +6,7 @@ description: "用于使用 Playwright 自动登录数据库课程设计系统、
 # Screenshot Automation Skill
 
 ## Purpose
-Automate report screenshot capture for the CQUPT smart visitor system using Playwright. Screenshots must demonstrate real pages, real demo data, role permissions, workflow states, and statistics.
+Automate report screenshot capture for the CQUPT smart CQUPT smart visitor appointment and campus access system using Playwright. Screenshots must demonstrate real pages, real demo data, role permissions, workflow states, and statistics.
 
 ## Inputs
 - Running frontend URL and backend API URL.
@@ -40,7 +40,7 @@ Capture at least login page, dashboard, visitor appointment page, approval page,
 - Use report-friendly viewport such as 1440x900 unless the user requests otherwise.
 - Produce a valid manifest that report automation can consume.
 
-## Default Rules For CQUPT Visitor System
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Use admin or school manager for dashboard, statistics, users, logs, and blacklist. Use visitor for appointment/my appointment pages. Use host for pending confirmation. Use department approver for department approval. Use gate security for verification, entry, exit, current-campus, and overdue visitor pages.
 
 ## References

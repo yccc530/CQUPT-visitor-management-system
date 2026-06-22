@@ -38,7 +38,7 @@ Produce formal requirement-analysis documents for a database application system.
 - Cover roles, workflows, data flows, functions, and non-functional needs.
 - Keep names consistent with future entities and tables.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Default roles are visitor, host, department approver, gate security staff, system administrator, and school-level manager. Default process: visitor submits appointment, system checks blacklist, host confirms, department approves, pass code is generated, gate verifies, entry is registered, exit is registered, record is archived, and statistics are queried.
 
 ## References

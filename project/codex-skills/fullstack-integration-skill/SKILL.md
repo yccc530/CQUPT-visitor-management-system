@@ -37,7 +37,7 @@ Keep frontend pages, backend APIs, database tables, RBAC permissions, workflow s
 - Ensure state transitions remain valid after fixes.
 - Re-run relevant tests or document why they cannot run.
 
-## Default Rules For CQUPT Visitor System
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Pay special attention to `visit_apply`, `approval_record`, `pass_code`, `access_record`, `blacklist`, `sys_user`, `sys_role`, `sys_permission`, `department`, and `campus_gate`. Align date-time formats, ID types, status labels, pagination response structure, and unified response format across the stack.
 
 ## References

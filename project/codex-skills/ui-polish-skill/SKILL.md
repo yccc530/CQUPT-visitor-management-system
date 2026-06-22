@@ -37,7 +37,7 @@ Polish the frontend of the CQUPT smart visitor appointment and campus access man
 - Avoid marketing-style landing pages; make the first screen the usable system.
 - Verify pages support screenshots for the final report.
 
-## Default Rules For CQUPT Visitor System
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Use dashboard cards for today visitors, current in-campus visitors, pending approvals, overdue visitors, pass-code verifications, and monthly visits. Use status tags for appointment status, access status, approval result, blacklist status, and pass-code validity. Use ECharts for department ranking, gate passage statistics, approval rate, and visit trend.
 
 ## References

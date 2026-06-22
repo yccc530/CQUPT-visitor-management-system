@@ -39,7 +39,7 @@ Implement or document the core visitor-management workflow with explicit states,
 - Block or warn blacklisted visitors.
 - Keep status names consistent across SQL, backend, frontend, diagrams, and report.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Default appointment statuses: `待确认`, `被访人已确认`, `被访人已拒绝`, `待部门审批`, `审批通过`, `审批拒绝`, `已取消`. Default access statuses: `未入校`, `已入校`, `已离校`, `超时未离校`, `异常处理`.
 
 ## References

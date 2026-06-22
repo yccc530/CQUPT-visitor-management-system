@@ -37,7 +37,7 @@ Test, debug, and document a database course project so the runnable system and r
 - Keep testing evidence consistent with system features and report text.
 - State clearly when a test cannot be run and why.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Include role-based test accounts for visitor, host, department approver, gate security staff, system administrator, and school manager. Include positive and negative tests for invalid status transitions and unauthorized access.
 
 ## References

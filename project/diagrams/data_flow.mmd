@@ -1,0 +1,52 @@
+flowchart TB
+  subgraph TOP[顶层数据流程]
+    Visitor[访客] -->|预约申请信息| System((智慧访客预约与出入校管理系统))
+    Host[被访人] -->|确认结果| System
+    Approver[部门审批人员] -->|审批意见| System
+    Guard[门岗安保人员] -->|核验与登记| System
+    Admin[系统管理员] -->|基础数据与权限配置| System
+    Manager[校级管理人员] -->|统计查询条件| System
+    System -->|预约状态与通行凭证| Visitor
+    System -->|统计报表| Manager
+    System <--> UserStore[(用户角色权限库)]
+    System <--> VisitStore[(访客与预约库)]
+    System <--> ApprovalStore[(审批与通行库)]
+    System <--> AccessStore[(出入校记录库)]
+    System <--> RiskStore[(黑名单与日志库)]
+  end
+
+  subgraph APPLY[访客预约数据流程]
+    A1[填写预约信息] --> A2((黑名单检查))
+    A2 -->|未命中| A3((保存预约申请))
+    A2 -->|命中| A4[限制入校提示]
+    A3 --> VisitorStore[(访客信息)]
+    A3 --> ApplyStore[(预约申请信息)]
+    A3 --> NoticeStore[(通知消息)]
+  end
+
+  subgraph APPROVAL[审批数据流程]
+    B1((被访人确认)) --> B2[(审批记录)]
+    B1 -->|确认通过| B3((部门审批))
+    B1 -->|拒绝| ApplyStore
+    B3 --> B2
+    B3 -->|审批通过| B4((生成通行凭证))
+    B3 -->|审批拒绝| ApplyStore
+    B4 --> PassStore[(通行凭证)]
+  end
+
+  subgraph GATE[门岗核验数据流程]
+    C1[扫描通行码] --> C2((通行凭证核验))
+    C2 --> PassStore
+    C2 --> ApplyStore
+    C2 --> BlackStore[(黑名单信息)]
+    C2 -->|通过| C3[允许入校登记]
+    C2 -->|失败| C4[返回失败原因]
+  end
+
+  subgraph ACCESS[出入校登记数据流程]
+    D1((入校登记)) --> AccessRecord[(出入校记录)]
+    D2((离校登记)) --> AccessRecord
+    D3((超时未离校检查)) --> AccessRecord
+    D3 --> ApplyStore
+    AccessRecord --> D4[当前在校与超时列表]
+  end

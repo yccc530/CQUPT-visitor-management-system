@@ -35,7 +35,7 @@ Perform final consistency checks and prepare a clean submission version for a da
 - Preserve user changes and avoid unrelated rewrites.
 - State remaining risks explicitly.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Treat `database/`, `backend/`, `frontend/`, `docs/`, and final report as the minimum submission set. Verify visitor workflow, RBAC, statistics, and test-account documentation before declaring the project ready.
 
 ## References

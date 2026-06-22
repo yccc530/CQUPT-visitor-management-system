@@ -1,4 +1,4 @@
 interface:
-  display_name: "前端界面美化"
-  short_description: "美化Vue与Element Plus页面，形成适合演示的校园蓝界面"
+  display_name: "前锟剿斤拷锟斤拷锟斤拷锟斤拷"
+  short_description: "锟斤拷锟斤拷Vue锟斤拷Element Plus页锟芥，锟轿筹拷锟绞猴拷锟斤拷示锟斤拷校园锟斤拷锟斤拷锟斤拷"
   default_prompt: "Use $ui-polish-skill to polish the visitor management frontend into a modern campus-blue demo UI."

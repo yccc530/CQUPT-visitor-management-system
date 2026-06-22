@@ -36,7 +36,7 @@ Support system function module diagram, visitor appointment workflow, gate verif
 - Ensure code can be copied into Mermaid or PlantUML renderers.
 - Provide a concise explanation for every diagram.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Prefer Mermaid for fast Markdown rendering. Use PlantUML when a use case diagram or detailed UML layout is clearer. Keep Chinese labels report-friendly and table/entity IDs stable.
 
 ## References

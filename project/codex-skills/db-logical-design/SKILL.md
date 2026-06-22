@@ -35,7 +35,7 @@ Convert conceptual E-R design into MySQL-ready relation schemas without writing 
 - Ensure the tables support appointment, approval, entry, exit, blacklist, statistics, and logs.
 - Make the design suitable for MySQL implementation.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Use `id` or clear business keys consistently. Prefer `created_at`, `updated_at`, and status fields where workflow tracking is required. Keep approval history in `approval_record`, access times in `access_record`, and generated credentials in `pass_code`.
 
 ## References

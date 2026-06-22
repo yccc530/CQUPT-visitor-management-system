@@ -1,4 +1,4 @@
 interface:
-  display_name: "±¨¸æ×Ô¶¯Éú³É"
-  short_description: "¶ÁÈ¡ÎÄµµ¡¢SQL¡¢Í¼±íºÍ½ØÍ¼£¬×Ô¶¯Éú³É¿Î³ÌÉè¼Æ±¨¸æ"
+  display_name: "ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½"
+  short_description: "ï¿½ï¿½È¡ï¿½Äµï¿½ï¿½ï¿½SQLï¿½ï¿½Í¼ï¿½ï¿½Í½ï¿½Í¼ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½É¿Î³ï¿½ï¿½ï¿½Æ±ï¿½ï¿½ï¿½"
   default_prompt: "Use $report-automation-skill to generate the database course design report automatically."

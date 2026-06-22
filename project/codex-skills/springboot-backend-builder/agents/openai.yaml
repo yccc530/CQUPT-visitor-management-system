@@ -1,7 +1,7 @@
 interface:
   display_name: "Spring Boot 后端生成"
   short_description: "按数据库表生成Spring Boot分层后端接口和说明文档"
-  default_prompt: "Use $springboot-backend-builder to build Spring Boot backend modules for the visitor system."
+  default_prompt: "Use $springboot-backend-builder to build Spring Boot backend modules for the CQUPT smart visitor appointment and campus access system."
 
 policy:
   allow_implicit_invocation: true

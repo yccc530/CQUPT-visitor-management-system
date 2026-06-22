@@ -34,7 +34,7 @@ Transform requirements into a conceptual database model. Focus on entities, attr
 - Keep the E-R diagram suitable for a course report.
 - Do not collapse conceptual design into only table DDL.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Start from these core entities: `visitor`, `campus_user`, `department`, `role`, `permission`, `gate`, `visit_apply`, `approval_record`, `access_record`, `pass_code`, `blacklist`, `system_log`, and `notice`. Add or remove entities only when the requirement context justifies it.
 
 ## References

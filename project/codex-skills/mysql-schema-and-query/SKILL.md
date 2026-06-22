@@ -39,7 +39,7 @@ Include queries for visitor history, host pending confirmations, today's entered
 - Add comments that make queries usable in the final report.
 - Avoid SQL that contradicts table design documents.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Use database names like `cqupt_visitor_management` unless the user specifies another. Seed data should include at least one approved visit, one rejected visit, one entered visitor, one exited visitor, one overdue visitor, one blacklisted visitor, and users across departments and gates.
 
 ## References

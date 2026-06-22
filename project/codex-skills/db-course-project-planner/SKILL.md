@@ -38,7 +38,7 @@ Plan a database principles course design project before implementation. Keep the
 - Keep the plan realistic for a student course project.
 - Avoid starting full project code unless the user explicitly asks for implementation.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Use Vue 3 + Element Plus + Axios + Vue Router for frontend, Spring Boot for backend, MySQL for database, Mermaid or PlantUML for diagrams, and Markdown for documents. Plan around visitor appointment, host confirmation, department approval, gate verification, entry/exit registration, blacklist management, record query, statistics, and system administration.
 
 ## References

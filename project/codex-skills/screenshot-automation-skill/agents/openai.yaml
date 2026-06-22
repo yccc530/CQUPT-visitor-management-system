@@ -1,4 +1,4 @@
 interface:
-  display_name: "自动截图"
-  short_description: "使用Playwright自动登录系统并批量截取报告所需页面"
+  display_name: "锟皆讹拷锟斤拷图"
+  short_description: "使锟斤拷Playwright锟皆讹拷锟斤拷录系统锟斤拷锟斤拷锟斤拷锟斤拷取锟斤拷锟斤拷锟斤拷锟斤拷页锟斤拷"
   default_prompt: "Use $screenshot-automation-skill to capture report screenshots with Playwright."

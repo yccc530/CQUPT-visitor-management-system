@@ -37,7 +37,7 @@ Support visitor management, campus user management, department management, role-
 - Validate parameters for important endpoints.
 - Keep APIs RESTful and easy for Vue/Axios to call.
 
-## Default Rules For CQUPT Visitor Management
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Prefer a course-friendly Spring Boot stack such as Spring Web, validation, MyBatis or MyBatis-Plus, MySQL connector, and Lombok if the project already uses it. Keep security practical for a course project and coordinate with `auth-rbac-builder` when permissions are requested.
 
 ## References

@@ -29,8 +29,8 @@ Generate a database principles final project report from project artifacts with 
 
 ## Outputs
 - `scripts/generate_report.py`
-- `docs/重庆邮电大学访客管理系统设计报告.md`
-- Optional `docs/重庆邮电大学访客管理系统设计报告.docx`
+- `docs/重庆邮电大学智慧访客预约与出入校管理系统设计报告.md`
+- Optional `docs/重庆邮电大学智慧访客预约与出入校管理系统设计报告.docx`
 - `docs/报告素材清单.md`
 - Optional report generation log.
 
@@ -44,7 +44,7 @@ Include system definition, requirement analysis, data flow diagram, data diction
 - Prefer generated content from source artifacts over duplicated hand-written fragments.
 - Clearly report missing artifacts instead of silently inventing final evidence.
 
-## Default Rules For CQUPT Visitor System
+## Default Rules For 重庆邮电大学智慧访客预约与出入校管理系统
 Use Markdown as the canonical report. Use Pandoc for DOCX export when installed; otherwise use Python-docx to create a simplified Word document or document the missing dependency. Keep screenshot captions tied to `screenshots/manifest.json`.
 
 ## References
