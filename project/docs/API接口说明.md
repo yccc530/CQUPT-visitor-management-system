@@ -1,4 +1,4 @@
-﻿# API 接口说明
+# API 接口说明
 
 项目名称：重庆邮电大学智慧访客预约与出入校管理系统  
 后端包名：`edu.cqupt.visitor`  
@@ -25,11 +25,12 @@ mysql -u root -p cqupt_visitor_system < database/schema.sql
 mysql -u root -p cqupt_visitor_system < database/seed.sql
 ```
 
-然后启动后端：
+然后启动后端。当前 Windows 中文路径环境下建议使用已验证的 JAR 方式：
 
 ```bash
 cd backend
-mvn spring-boot:run
+mvn -DskipTests package
+java -jar target/cqupt-visitor-backend-0.1.0.jar
 ```
 
 默认数据库连接配置位于 `backend/src/main/resources/application.yml`，可通过环境变量覆盖：
@@ -184,3 +185,31 @@ mvn spring-boot:run
 - 通行码生成与门岗核验。
 - 入校、离校、当前在校、超时未离校专用接口。
 - 统计报表聚合接口。
+
+## 8. 登录认证与权限接口
+
+| 模块 | 方法 | 路径 | 说明 | 权限 |
+|---|---|---|---|---|
+| 登录认证 | POST | `/api/auth/login` | 用户名密码登录，返回 JWT Token | 匿名 |
+| 登录认证 | POST | `/api/auth/logout` | 退出登录，撤销当前 Token | 已登录 |
+| 当前用户 | GET | `/api/auth/me` | 获取当前用户、角色和权限编码 | 已登录 |
+| 菜单权限 | GET | `/api/auth/menus` | 获取当前用户可访问菜单树 | 已登录 |
+
+登录请求示例：
+
+```json
+{
+  "username": "admin",
+  "password": "123456"
+}
+```
+
+登录成功响应中 `data.token` 即 JWT Token，前端后续请求应加入请求头：
+
+```http
+Authorization: Bearer <token>
+```
+
+默认测试账号：`admin / 123456`、`teacher01 / 123456`、`approver01 / 123456`、`guard01 / 123456`、`manager01 / 123456`。
+
+无 Token 或 Token 无效返回 `401`，角色无权限返回 `403`。

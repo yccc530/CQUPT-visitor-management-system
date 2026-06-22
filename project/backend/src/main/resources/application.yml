@@ -28,3 +28,7 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+jwt:
+  secret: ${JWT_SECRET:cqupt-visitor-system-secret-key-for-course-design-2026}
+  expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}

@@ -1,4 +1,4 @@
-﻿-- 重庆邮电大学智慧访客预约与出入校管理系统
+-- 重庆邮电大学智慧访客预约与出入校管理系统
 -- MySQL 8 seed data script
 
 USE cqupt_visitor_system;
@@ -69,13 +69,13 @@ INSERT INTO campus_gate (id, gate_code, gate_name, gate_location, gate_type, sta
 (4, 'WEST_GATE', '西校门', '西侧生活区入口', 'NORMAL', 'ENABLED', '备用通道');
 
 INSERT INTO sys_user (id, username, password_hash, real_name, phone, email, department_id, user_type, status, last_login_time) VALUES
-(1, 'admin', '$2a$10$VYvP9rO2zG2XH8p8wYh3A.0t6Jw6gS4hLjL9c1XwC5p4fJ2lRk9dO', '系统管理员', '13800000001', 'admin@cqupt.edu.cn', 5, 'ADMIN', 'ENABLED', NOW()),
-(2, 'teacher_zhang', '$2a$10$VYvP9rO2zG2XH8p8wYh3A.0t6Jw6gS4hLjL9c1XwC5p4fJ2lRk9dO', '张晓峰', '13800000002', 'zhangxf@cqupt.edu.cn', 2, 'HOST', 'ENABLED', NOW()),
-(3, 'approver_cs', '$2a$10$VYvP9rO2zG2XH8p8wYh3A.0t6Jw6gS4hLjL9c1XwC5p4fJ2lRk9dO', '李审批', '13800000003', 'approve.cs@cqupt.edu.cn', 2, 'APPROVER', 'ENABLED', NOW()),
-(4, 'guard_north', '$2a$10$VYvP9rO2zG2XH8p8wYh3A.0t6Jw6gS4hLjL9c1XwC5p4fJ2lRk9dO', '王安保', '13800000004', 'guard@cqupt.edu.cn', 4, 'GUARD', 'ENABLED', NOW()),
-(5, 'school_manager', '$2a$10$VYvP9rO2zG2XH8p8wYh3A.0t6Jw6gS4hLjL9c1XwC5p4fJ2lRk9dO', '周校管', '13800000005', 'manager@cqupt.edu.cn', 5, 'MANAGER', 'ENABLED', NOW()),
-(6, 'teacher_li', '$2a$10$VYvP9rO2zG2XH8p8wYh3A.0t6Jw6gS4hLjL9c1XwC5p4fJ2lRk9dO', '李明', '13800000006', 'liming@cqupt.edu.cn', 3, 'HOST', 'ENABLED', NOW()),
-(7, 'approver_auto', '$2a$10$VYvP9rO2zG2XH8p8wYh3A.0t6Jw6gS4hLjL9c1XwC5p4fJ2lRk9dO', '赵审批', '13800000007', 'approve.auto@cqupt.edu.cn', 3, 'APPROVER', 'ENABLED', NOW());
+(1, 'admin', '$2b$10$5pEOo2KWkcTaG5.cUGW3gemS2DeLtd5R.jddXUQm/nfnRFqz1RK4m', '系统管理员', '13800000001', 'admin@cqupt.edu.cn', 5, 'ADMIN', 'ENABLED', NOW()),
+(2, 'teacher01', '$2b$10$5pEOo2KWkcTaG5.cUGW3gemS2DeLtd5R.jddXUQm/nfnRFqz1RK4m', '张晓峰', '13800000002', 'teacher01@cqupt.edu.cn', 2, 'HOST', 'ENABLED', NOW()),
+(3, 'approver01', '$2b$10$5pEOo2KWkcTaG5.cUGW3gemS2DeLtd5R.jddXUQm/nfnRFqz1RK4m', '李审批', '13800000003', 'approver01@cqupt.edu.cn', 2, 'APPROVER', 'ENABLED', NOW()),
+(4, 'guard01', '$2b$10$5pEOo2KWkcTaG5.cUGW3gemS2DeLtd5R.jddXUQm/nfnRFqz1RK4m', '王安保', '13800000004', 'guard01@cqupt.edu.cn', 4, 'GUARD', 'ENABLED', NOW()),
+(5, 'manager01', '$2b$10$5pEOo2KWkcTaG5.cUGW3gemS2DeLtd5R.jddXUQm/nfnRFqz1RK4m', '周校管', '13800000005', 'manager01@cqupt.edu.cn', 5, 'MANAGER', 'ENABLED', NOW()),
+(6, 'teacher02', '$2b$10$5pEOo2KWkcTaG5.cUGW3gemS2DeLtd5R.jddXUQm/nfnRFqz1RK4m', '李明', '13800000006', 'teacher02@cqupt.edu.cn', 3, 'HOST', 'ENABLED', NOW()),
+(7, 'approver02', '$2b$10$5pEOo2KWkcTaG5.cUGW3gemS2DeLtd5R.jddXUQm/nfnRFqz1RK4m', '赵审批', '13800000007', 'approver02@cqupt.edu.cn', 3, 'APPROVER', 'ENABLED', NOW());
 
 UPDATE department SET leader_user_id = 2 WHERE id = 2;
 UPDATE department SET leader_user_id = 6 WHERE id = 3;
@@ -92,11 +92,13 @@ INSERT INTO sys_user_role (id, user_id, role_id) VALUES
 (7, 7, 3);
 
 INSERT INTO sys_role_permission (role_id, permission_id) VALUES
-(5, 1), (5, 11), (5, 14), (5, 15), (5, 16), (5, 17), (5, 18), (5, 19), (5, 20),
+(1, 2), (1, 3),
 (2, 1), (2, 4), (2, 12),
 (3, 1), (3, 5), (3, 12), (3, 13),
-(4, 1), (4, 6), (4, 7), (4, 8), (4, 9), (4, 10), (4, 11),
-(6, 1), (6, 9), (6, 10), (6, 12), (6, 13), (6, 18);
+(4, 1), (4, 6), (4, 7), (4, 8), (4, 9), (4, 10),
+(5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (5, 10),
+(5, 11), (5, 12), (5, 13), (5, 14), (5, 15), (5, 16), (5, 17), (5, 18), (5, 19), (5, 20),
+(6, 1), (6, 9), (6, 10), (6, 12), (6, 13);
 
 INSERT INTO visitor (id, visitor_name, id_type, id_number, phone, company, gender, visitor_level, status) VALUES
 (1, '王小明', 'ID_CARD', '500101199001010011', '13900010001', '重庆数智科技有限公司', '男', 'NORMAL', 'NORMAL'),
