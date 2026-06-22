@@ -20,18 +20,18 @@
 - [x] 进行范式检查并说明设计依据。
 
 ## 4. MySQL 建表和数据
-- [ ] 编写 `database/create_database.sql`。
-- [ ] 编写 `database/schema.sql`。
-- [ ] 编写 `database/seed.sql`。
-- [ ] 编写 `database/query_examples.sql`。
+- [x] 编写 `database/create_database.sql`。
+- [x] 编写 `database/schema.sql`。
+- [x] 编写 `database/seed.sql`。
+- [x] 编写 `database/query_examples.sql`。
 - [ ] 验证 SQL 可执行并能支撑页面展示。
 
 ## 5. 后端接口
-- [ ] 搭建 Spring Boot 3 后端项目。
-- [ ] 配置 MySQL、MyBatis Plus、Swagger / Knife4j。
-- [ ] 编写 Entity、Mapper、Service、Controller。
-- [ ] 实现统一返回、异常处理、参数校验。
-- [ ] 输出 API 接口说明。
+- [x] 搭建 Spring Boot 3 后端项目。
+- [x] 配置 MySQL、MyBatis Plus、Swagger / Knife4j。
+- [x] 编写 Entity、Mapper、Service、Controller。
+- [x] 实现统一返回、异常处理、参数校验。
+- [x] 输出 API 接口说明。
 
 ## 6. 权限系统
 - [ ] 实现登录接口。
@@ -96,5 +96,6 @@
 - [ ] 完善 README、运行说明和提交说明。
 - [ ] 生成最终检查清单。
 - [ ] 准备课程大作业提交版本。
+
 
 
