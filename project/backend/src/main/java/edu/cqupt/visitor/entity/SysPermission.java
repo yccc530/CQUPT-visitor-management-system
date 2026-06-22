@@ -1,4 +1,4 @@
-﻿package edu.cqupt.visitor.entity;
+package edu.cqupt.visitor.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

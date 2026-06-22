@@ -1,4 +1,4 @@
-﻿# 重庆邮电大学智慧访客预约与出入校管理系统 TODO
+# 重庆邮电大学智慧访客预约与出入校管理系统 TODO
 
 ## 1. 需求分析
 - [x] 编写系统定义。
@@ -24,7 +24,7 @@
 - [x] 编写 `database/schema.sql`。
 - [x] 编写 `database/seed.sql`。
 - [x] 编写 `database/query_examples.sql`。
-- [ ] 验证 SQL 可执行并能支撑页面展示。
+- [x] 验证 SQL 可执行并能支撑页面展示。
 
 ## 5. 后端接口
 - [x] 搭建 Spring Boot 3 后端项目。

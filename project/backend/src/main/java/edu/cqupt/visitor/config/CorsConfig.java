@@ -1,4 +1,4 @@
-﻿package edu.cqupt.visitor.config;
+package edu.cqupt.visitor.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

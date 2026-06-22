@@ -1,4 +1,4 @@
-﻿package edu.cqupt.visitor.controller;
+package edu.cqupt.visitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import edu.cqupt.visitor.common.ApiResponse;

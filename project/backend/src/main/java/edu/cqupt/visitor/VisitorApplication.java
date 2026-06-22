@@ -1,4 +1,4 @@
-﻿package edu.cqupt.visitor;
+package edu.cqupt.visitor;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

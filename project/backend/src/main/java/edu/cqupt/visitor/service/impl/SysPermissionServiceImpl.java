@@ -1,4 +1,4 @@
-﻿package edu.cqupt.visitor.service.impl;
+package edu.cqupt.visitor.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import edu.cqupt.visitor.entity.SysPermission;

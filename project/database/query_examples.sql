@@ -1,8 +1,9 @@
-﻿-- 重庆邮电大学智慧访客预约与出入校管理系统
+-- 重庆邮电大学智慧访客预约与出入校管理系统
 -- Typical SQL query examples for database course report
 
 USE cqupt_visitor_system;
 SET NAMES utf8mb4;
+SET collation_connection = 'utf8mb4_unicode_ci';
 
 -- 1. 查询某访客的历史预约记录
 SET @visitor_phone = '13900010001';

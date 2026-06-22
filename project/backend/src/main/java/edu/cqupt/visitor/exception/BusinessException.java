@@ -1,4 +1,4 @@
-﻿package edu.cqupt.visitor.exception;
+package edu.cqupt.visitor.exception;
 
 public class BusinessException extends RuntimeException {
 

@@ -1,4 +1,4 @@
-﻿package edu.cqupt.visitor.exception;
+package edu.cqupt.visitor.exception;
 
 import edu.cqupt.visitor.common.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
