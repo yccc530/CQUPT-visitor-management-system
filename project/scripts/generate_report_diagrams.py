@@ -7,454 +7,508 @@ ROOT = Path(__file__).resolve().parents[1]
 EXPORT_DIR = ROOT / 'diagrams' / 'export'
 FIGURE_DIR = ROOT / 'report-latex' / 'figures'
 
-BLUE = '#1f6feb'
-DARK = '#1f2937'
+BG = '#f7fbff'
+INK = '#172033'
 MUTED = '#64748b'
 LINE = '#334155'
-BG = '#f8fbff'
-CARD = '#ffffff'
+BLUE = '#2563eb'
+CYAN = '#0891b2'
 GREEN = '#16a34a'
 AMBER = '#d97706'
 RED = '#dc2626'
 PURPLE = '#7c3aed'
-CYAN = '#0891b2'
-GRAY = '#e5e7eb'
+BORDER = '#b8c7dc'
+WHITE = '#ffffff'
+STORE = '#f8fafc'
 
 
-def _font(size=28, bold=False):
-    candidates = [
+def _font(size=26, bold=False):
+    choices = [
         r'C:\Windows\Fonts\msyhbd.ttc' if bold else r'C:\Windows\Fonts\msyh.ttc',
         r'C:\Windows\Fonts\simhei.ttf',
         r'C:\Windows\Fonts\simsun.ttc',
         r'C:\Windows\Fonts\arial.ttf',
     ]
-    for item in candidates:
+    for c in choices:
         try:
-            return ImageFont.truetype(item, size=size)
+            return ImageFont.truetype(c, size=size)
         except Exception:
-            continue
+            pass
     return ImageFont.load_default()
 
-
-FONT = _font(28)
-FONT_SM = _font(22)
 FONT_XS = _font(18)
-FONT_BOLD = _font(30, True)
+FONT_SM = _font(22)
+FONT = _font(26)
+FONT_BOLD = _font(28, True)
 FONT_TITLE = _font(42, True)
 
 
-def text_size(draw, text, font):
+def size(draw, text, font):
     box = draw.textbbox((0, 0), text, font=font)
     return box[2] - box[0], box[3] - box[1]
 
 
-def wrap_text(draw, text, font, max_width):
-    lines = []
-    current = ''
-    for ch in text:
-        test = current + ch
-        if text_size(draw, test, font)[0] <= max_width or not current:
-            current = test
-        else:
-            lines.append(current)
-            current = ch
-    if current:
-        lines.append(current)
-    return lines
+def wrap(draw, text, font, max_width):
+    result = []
+    for raw in str(text).split('\n'):
+        line = ''
+        for ch in raw:
+            trial = line + ch
+            if size(draw, trial, font)[0] <= max_width or not line:
+                line = trial
+            else:
+                result.append(line)
+                line = ch
+        result.append(line)
+    return result
 
 
-class Diagram:
-    def __init__(self, width, height, title):
-        self.img = Image.new('RGB', (width, height), BG)
+class Canvas:
+    def __init__(self, w, h, title):
+        self.w = w
+        self.h = h
+        self.img = Image.new('RGB', (w, h), BG)
         self.draw = ImageDraw.Draw(self.img)
-        self.width = width
-        self.height = height
-        self.title = title
-        self.draw.rounded_rectangle((24, 24, width - 24, 100), radius=24, fill='#eaf3ff', outline='#b7d4ff', width=2)
-        tw, th = text_size(self.draw, title, FONT_TITLE)
-        self.draw.text(((width - tw) / 2, 42), title, fill='#0f172a', font=FONT_TITLE)
+        self.draw.rounded_rectangle((40, 30, w - 40, 105), radius=20, fill='#eaf3ff', outline='#bfdbfe', width=2)
+        tw, th = size(self.draw, title, FONT_TITLE)
+        self.draw.text(((w - tw) / 2, 48), title, fill='#0f172a', font=FONT_TITLE)
 
-    def box(self, xy, text, fill=CARD, outline=BLUE, font=None, radius=18, width=3, color=DARK):
-        font = font or FONT
-        x1, y1, x2, y2 = xy
-        self.draw.rounded_rectangle(xy, radius=radius, fill=fill, outline=outline, width=width)
-        lines = wrap_text(self.draw, text, font, max(40, x2 - x1 - 28))
-        line_h = text_size(self.draw, '测', font)[1] + 8
-        total_h = len(lines) * line_h
-        y = y1 + (y2 - y1 - total_h) / 2
-        for line in lines:
-            tw, _ = text_size(self.draw, line, font)
-            self.draw.text((x1 + (x2 - x1 - tw) / 2, y), line, fill=color, font=font)
-            y += line_h
+    def centered_text(self, box, text, font=FONT, fill=INK, line_gap=8):
+        x1, y1, x2, y2 = box
+        lines = wrap(self.draw, text, font, x2 - x1 - 28)
+        heights = [size(self.draw, line, font)[1] for line in lines]
+        total = sum(heights) + max(0, len(lines) - 1) * line_gap
+        y = y1 + (y2 - y1 - total) / 2
+        for line, lh in zip(lines, heights):
+            tw, _ = size(self.draw, line, font)
+            self.draw.text((x1 + (x2 - x1 - tw) / 2, y), line, fill=fill, font=font)
+            y += lh + line_gap
 
-    def small_label(self, x, y, text, fill=MUTED, font=None):
-        self.draw.text((x, y), text, fill=fill, font=font or FONT_SM)
+    def external(self, box, text):
+        self.draw.rectangle(box, fill=WHITE, outline=CYAN, width=3)
+        self.centered_text(box, text, FONT_BOLD)
 
-    def line(self, p1, p2, color=LINE, width=3, label=None, label_pos=0.5):
+    def process(self, box, text, pid=None):
+        self.draw.rounded_rectangle(box, radius=24, fill='#eef6ff', outline=BLUE, width=3)
+        if pid:
+            self.draw.ellipse((box[0] + 14, box[1] + 12, box[0] + 52, box[1] + 50), fill=BLUE, outline=BLUE)
+            self.centered_text((box[0] + 14, box[1] + 12, box[0] + 52, box[1] + 50), pid, FONT_XS, WHITE)
+        self.centered_text(box, text, FONT_BOLD)
+
+    def datastore(self, box, text):
+        x1, y1, x2, y2 = box
+        self.draw.rectangle(box, fill=STORE, outline=BORDER, width=3)
+        self.draw.line((x1 + 18, y1, x1 + 18, y2), fill=BORDER, width=3)
+        self.centered_text((x1 + 20, y1, x2, y2), text, FONT_SM)
+
+    def entity(self, box, title, attrs, color=BLUE):
+        x1, y1, x2, y2 = box
+        self.draw.rounded_rectangle(box, radius=10, fill=WHITE, outline=color, width=3)
+        self.draw.rectangle((x1, y1, x2, y1 + 48), fill=color, outline=color)
+        self.centered_text((x1, y1, x2, y1 + 48), title, FONT_BOLD, WHITE)
+        y = y1 + 62
+        for a in attrs:
+            font = FONT_XS if len(a) > 15 else FONT_SM
+            fill = '#0f172a'
+            if a.startswith('PK'):
+                fill = BLUE
+            self.draw.text((x1 + 18, y), a, fill=fill, font=font)
+            if a.startswith('PK'):
+                tw, th = size(self.draw, a, font)
+                self.draw.line((x1 + 18, y + th + 2, x1 + 18 + tw, y + th + 2), fill=BLUE, width=2)
+            y += 30
+
+    def relation(self, center, w, h, text, color=AMBER):
+        cx, cy = center
+        points = [(cx, cy - h/2), (cx + w/2, cy), (cx, cy + h/2), (cx - w/2, cy)]
+        self.draw.polygon(points, fill='#fff7ed', outline=color)
+        self.draw.line(points + [points[0]], fill=color, width=3)
+        self.centered_text((cx - w/2 + 10, cy - h/2 + 6, cx + w/2 - 10, cy + h/2 - 6), text, FONT_SM)
+
+    def line(self, p1, p2, label=None, label_at=0.5, color=LINE, width=3, arrow=True):
         self.draw.line((p1, p2), fill=color, width=width)
-        self._arrow_head(p1, p2, color)
+        if arrow:
+            self.arrow_head(p1, p2, color)
         if label:
-            lx = p1[0] + (p2[0] - p1[0]) * label_pos
-            ly = p1[1] + (p2[1] - p1[1]) * label_pos
-            self.tag(lx, ly, label)
+            self.label(p1[0] + (p2[0] - p1[0]) * label_at, p1[1] + (p2[1] - p1[1]) * label_at, label)
 
-    def polyline(self, points, color=LINE, width=3, label=None):
-        self.draw.line(points, fill=color, width=width, joint='curve')
-        self._arrow_head(points[-2], points[-1], color)
+    def poly(self, pts, label=None, color=LINE, width=3, arrow=True):
+        self.draw.line(pts, fill=color, width=width, joint='curve')
+        if arrow:
+            self.arrow_head(pts[-2], pts[-1], color)
         if label:
-            mid = points[len(points)//2]
-            self.tag(mid[0], mid[1], label)
+            mid = pts[len(pts)//2]
+            self.label(mid[0], mid[1], label)
 
-    def _arrow_head(self, p1, p2, color):
+    def arrow_head(self, p1, p2, color):
         angle = atan2(p2[1] - p1[1], p2[0] - p1[0])
-        size = 16
+        length = 15
         pts = [
             p2,
-            (p2[0] - size * cos(angle - pi / 7), p2[1] - size * sin(angle - pi / 7)),
-            (p2[0] - size * cos(angle + pi / 7), p2[1] - size * sin(angle + pi / 7)),
+            (p2[0] - length * cos(angle - pi / 7), p2[1] - length * sin(angle - pi / 7)),
+            (p2[0] - length * cos(angle + pi / 7), p2[1] - length * sin(angle + pi / 7)),
         ]
         self.draw.polygon(pts, fill=color)
 
-    def tag(self, x, y, text):
+    def label(self, x, y, text):
         font = FONT_XS
-        tw, th = text_size(self.draw, text, font)
-        pad = 8
-        self.draw.rounded_rectangle((x - tw/2 - pad, y - th/2 - pad, x + tw/2 + pad, y + th/2 + pad), radius=8, fill='#ffffff', outline='#cbd5e1')
+        tw, th = size(self.draw, text, font)
+        pad = 6
+        self.draw.rounded_rectangle((x - tw/2 - pad, y - th/2 - pad, x + tw/2 + pad, y + th/2 + pad), radius=8, fill=WHITE, outline='#cbd5e1')
         self.draw.text((x - tw/2, y - th/2 - 1), text, fill=MUTED, font=font)
 
-    def group(self, xy, title, outline='#cbd5e1'):
-        x1, y1, x2, y2 = xy
-        self.draw.rounded_rectangle(xy, radius=24, fill='#ffffff', outline=outline, width=2)
-        self.draw.text((x1 + 20, y1 + 14), title, fill=outline if outline != '#cbd5e1' else MUTED, font=FONT_SM)
+    def note(self, box, text):
+        self.draw.rounded_rectangle(box, radius=14, fill='#fff7ed', outline='#fed7aa', width=2)
+        self.centered_text(box, text, FONT_SM, '#7c2d12')
 
     def save(self, name):
         EXPORT_DIR.mkdir(parents=True, exist_ok=True)
         FIGURE_DIR.mkdir(parents=True, exist_ok=True)
-        export = EXPORT_DIR / f'{name}.png'
-        figure = FIGURE_DIR / f'{name}.png'
-        self.img.save(export)
-        shutil.copy2(export, figure)
-        return export
+        out = EXPORT_DIR / f'{name}.png'
+        fig = FIGURE_DIR / f'{name}.png'
+        self.img.save(out)
+        shutil.copy2(out, fig)
+        return out
 
 
 def data_flow_level0():
-    d = Diagram(1800, 1100, '顶层数据流程图')
-    d.box((690, 390, 1110, 570), '智慧访客预约与出入校管理系统', fill='#eaf3ff', outline=BLUE, font=FONT_BOLD)
-    entities = [
-        ('访客', (90, 180, 310, 270), (690, 430), '预约申请/身份信息'),
-        ('被访人', (780, 170, 1020, 260), (900, 390), '确认意见'),
-        ('部门审批人员', (1440, 180, 1700, 270), (1110, 430), '审批意见'),
-        ('门岗安保人员', (1440, 650, 1700, 740), (1110, 520), '核验与登记'),
-        ('校级管理人员', (780, 850, 1040, 940), (930, 570), '统计查询'),
-        ('系统管理员', (90, 650, 330, 740), (690, 520), '基础数据维护'),
-    ]
-    for name, box, target, label in entities:
-        d.box(box, name, fill='#ffffff', outline=CYAN, font=FONT_BOLD)
-        sx = (box[0] + box[2]) // 2
-        sy = (box[1] + box[3]) // 2
-        d.line((sx, sy), target, label=label)
+    c = Canvas(2200, 1350, '顶层数据流程图')
+    c.process((860, 430, 1340, 620), '智慧访客预约与\n出入校管理系统', 'P0')
+    left = [('访客', (120, 250, 360, 340), '预约申请、身份信息'), ('系统管理员', (120, 720, 360, 810), '基础数据维护')]
+    right = [('被访人', (1780, 210, 2020, 300), '确认意见'), ('部门审批人员', (1780, 430, 2020, 520), '审批意见'), ('门岗安保人员', (1780, 650, 2020, 740), '核验与登记'), ('校级管理人员', (1780, 870, 2020, 960), '统计查询')]
+    for name, box, label in left:
+        c.external(box, name)
+        c.poly([(box[2], (box[1]+box[3])//2), (640, (box[1]+box[3])//2), (640, 525), (860, 525)], label=label)
+    for name, box, label in right:
+        c.external(box, name)
+        c.poly([(1340, 525), (1560, 525), (1560, (box[1]+box[3])//2), (box[0], (box[1]+box[3])//2)], label=label)
     stores = [
-        ('D1 访客与预约数据', (160, 950, 430, 1030)),
-        ('D2 审批与通行数据', (520, 950, 790, 1030)),
-        ('D3 出入校记录数据', (880, 950, 1150, 1030)),
-        ('D4 用户权限基础数据', (1240, 950, 1510, 1030)),
+        ('D1 访客与预约数据', (300, 1080, 620, 1160)),
+        ('D2 审批与通行数据', (720, 1080, 1040, 1160)),
+        ('D3 出入校记录数据', (1160, 1080, 1480, 1160)),
+        ('D4 用户权限基础数据', (1580, 1080, 1900, 1160)),
     ]
-    for name, box in stores:
-        d.box(box, name, fill='#f8fafc', outline='#94a3b8', font=FONT_SM, radius=12)
-        d.line((900, 570), ((box[0]+box[2])//2, box[1]), color='#64748b')
-    return d.save('data_flow_level0')
+    for i, (name, box) in enumerate(stores):
+        c.datastore(box, name)
+        sx = 920 + i * 120
+        c.poly([(1100, 620), (1100, 920), (sx, 920), ((box[0]+box[2])//2, box[1])], label='读写')
+    c.note((620, 1230, 1580, 1290), '说明：外部实体通过预约、审批、核验和查询等数据流与系统交互；数据存储用于沉淀业务数据和权限基础数据。')
+    return c.save('data_flow_level0')
 
 
 def data_flow_level1():
-    d = Diagram(2100, 1250, '预约审批与出入校数据流程图')
+    c = Canvas(2600, 1550, '二层数据流程图')
     processes = [
-        ('P1 预约受理\n黑名单检查', (170, 390, 450, 520), BLUE),
-        ('P2 被访人确认\n部门审批', (630, 390, 930, 520), PURPLE),
-        ('P3 通行凭证\n门岗核验', (1110, 390, 1410, 520), GREEN),
-        ('P4 出入校登记\n记录归档', (1590, 390, 1890, 520), AMBER),
+        ('P1', '受理预约申请', (130, 420, 410, 530)),
+        ('P2', '黑名单检查', (520, 420, 800, 530)),
+        ('P3', '被访人确认', (910, 420, 1190, 530)),
+        ('P4', '部门审批', (1300, 420, 1580, 530)),
+        ('P5', '生成通行凭证', (1690, 420, 1970, 530)),
+        ('P6', '门岗核验与\n出入校登记', (2080, 420, 2380, 530)),
+        ('P7', '查询统计', (1120, 1050, 1400, 1160)),
     ]
-    for text, box, color in processes:
-        d.box(box, text, fill='#ffffff', outline=color, font=FONT_BOLD)
-    d.line((450, 455), (630, 455), label='待确认申请')
-    d.line((930, 455), (1110, 455), label='审批通过')
-    d.line((1410, 455), (1590, 455), label='核验结果')
-    top = [('访客', (170, 190, 450, 280)), ('被访人', (640, 190, 900, 280)), ('审批人员', (1120, 190, 1380, 280)), ('门岗安保', (1600, 190, 1860, 280))]
-    for name, box in top:
-        d.box(box, name, fill='#eef6ff', outline=CYAN, font=FONT_BOLD)
-        d.line(((box[0]+box[2])//2, box[3]), ((box[0]+box[2])//2, 390), label='数据输入')
+    for pid, name, box in processes:
+        c.process(box, name, pid)
+    for a, b, label in zip(processes, processes[1:6], ['预约数据', '检查结果', '确认结果', '审批结果', '通行凭证']):
+        c.line((a[2][2], 475), (b[2][0], 475), label=label)
+    externals = [
+        ('访客', (150, 210, 360, 290), (270, 420), '提交预约/查询状态'),
+        ('被访人', (945, 210, 1155, 290), (1050, 420), '确认或拒绝'),
+        ('部门审批人员', (1325, 210, 1555, 290), (1440, 420), '审批意见'),
+        ('门岗安保人员', (2115, 210, 2345, 290), (2230, 420), '核验登记'),
+        ('校级管理人员', (1120, 1290, 1400, 1370), (1260, 1160), '统计查询'),
+    ]
+    for name, box, target, label in externals:
+        c.external(box, name)
+        c.line(((box[0]+box[2])//2, box[3]), target, label=label)
     stores = [
-        ('visitor\n访客信息', (120, 780, 360, 890)),
-        ('visit_apply\n预约申请', (440, 780, 680, 890)),
-        ('approval_record\n审批记录', (760, 780, 1030, 890)),
-        ('pass_code\n通行凭证', (1110, 780, 1350, 890)),
-        ('access_record\n出入校记录', (1430, 780, 1700, 890)),
-        ('blacklist\n黑名单', (1780, 780, 2000, 890)),
+        ('D1 访客信息', (120, 760, 370, 840), (270, 530)),
+        ('D2 预约申请', (460, 760, 710, 840), (650, 530)),
+        ('D3 黑名单', (800, 760, 1050, 840), (660, 530)),
+        ('D4 审批记录', (1140, 760, 1390, 840), (1440, 530)),
+        ('D5 通行凭证', (1480, 760, 1730, 840), (1830, 530)),
+        ('D6 出入校记录', (1820, 760, 2070, 840), (2230, 530)),
+        ('D7 用户权限数据', (2160, 760, 2440, 840), (2230, 530)),
     ]
-    for text, box in stores:
-        d.box(box, text, fill='#f8fafc', outline='#94a3b8', font=FONT_SM, radius=12)
-    for p, s in [((310,520),(240,780)), ((310,520),(560,780)), ((780,520),(895,780)), ((1260,520),(1230,780)), ((1740,520),(1565,780)), ((310,520),(1890,780))]:
-        d.line(p, s, color='#64748b')
-    d.box((760, 1010, 1340, 1110), '统计报表读取预约、审批、通行、出入校和风险数据，形成趋势、排行与状态分布。', fill='#fff7ed', outline=AMBER, font=FONT_SM)
-    d.line((1030, 890), (1050, 1010), color=AMBER)
-    d.line((1230, 890), (1130, 1010), color=AMBER)
-    d.line((1565, 890), (1230, 1010), color=AMBER)
-    return d.save('data_flow_level1')
+    for name, box, src in stores:
+        c.datastore(box, name)
+        c.poly([src, (src[0], 660), ((box[0]+box[2])//2, 660), ((box[0]+box[2])//2, box[1])], label='读写')
+    for box in [(460,760,710,840), (1140,760,1390,840), (1480,760,1730,840), (1820,760,2070,840)]:
+        c.poly([((box[0]+box[2])//2, box[3]), ((box[0]+box[2])//2, 980), (1260, 980), (1260, 1050)], label='统计数据')
+    c.note((700, 1230, 1900, 1310), '说明：二层图将预约、黑名单检查、确认、审批、凭证、门岗登记和查询统计拆分为独立处理过程，数据流按业务顺序自左向右流动，避免交叉。')
+    return c.save('data_flow_level1')
 
 
 def er_core_business():
-    d = Diagram(2000, 1150, '核心业务 E-R 图')
-    boxes = {
-        'visitor': (120, 280, 390, 390),
-        'visitor_vehicle': (110, 490, 390, 590),
-        'visitor_companion': (110, 690, 390, 790),
-        'blacklist': (120, 880, 390, 980),
-        'visit_apply': (820, 420, 1180, 570),
-        'approval_record': (790, 700, 1210, 830),
-        'pass_code': (1530, 280, 1840, 390),
-        'access_record': (1510, 540, 1860, 670),
-        'campus_gate': (1530, 820, 1840, 930),
+    c = Canvas(2800, 1800, '核心业务 E-R 图')
+    entities = {
+        'visitor': ((120, 580, 430, 760), '访客 visitor', ['PK id', '姓名', '手机号', '证件号', '访客类型'], BLUE),
+        'blacklist': ((120, 250, 430, 430), '黑名单 blacklist', ['PK id', '证件号', '风险原因', '风险等级', '有效期'], RED),
+        'vehicle': ((120, 1050, 430, 1230), '访客车辆 vehicle', ['PK id', '车牌号', '车辆类型', '所属访客'], CYAN),
+        'apply': ((900, 600, 1240, 830), '预约申请 visit_apply', ['PK id', '预约编号', '访问事由', '计划时间', '预约状态', '访问状态'], BLUE),
+        'companion': ((900, 1040, 1240, 1220), '随行人员 companion', ['PK id', '姓名', '证件号', '联系电话'], CYAN),
+        'user': ((900, 230, 1240, 410), '校内用户 sys_user', ['PK id', '姓名', '账号', '所属部门'], GREEN),
+        'dept': ((1460, 230, 1800, 410), '部门 department', ['PK id', '部门名称', '部门编码'], GREEN),
+        'approval': ((1460, 1040, 1800, 1250), '审批记录 approval_record', ['PK id', '审批环节', '审批结果', '审批意见', '审批时间'], AMBER),
+        'pass': ((2040, 520, 2360, 700), '通行凭证 pass_code', ['PK id', '通行码', '有效期', '凭证状态'], PURPLE),
+        'access': ((2040, 920, 2360, 1140), '出入校记录 access_record', ['PK id', '入校时间', '离校时间', '访问状态', '经办安保'], PURPLE),
+        'gate': ((2040, 1360, 2360, 1530), '校门 campus_gate', ['PK id', '校门名称', '校门位置'], CYAN),
     }
-    labels = {
-        'visitor': 'visitor\n访客', 'visitor_vehicle': 'visitor_vehicle\n车辆', 'visitor_companion': 'visitor_companion\n随行人员',
-        'blacklist': 'blacklist\n黑名单', 'visit_apply': 'visit_apply\n预约申请', 'approval_record': 'approval_record\n审批记录',
-        'pass_code': 'pass_code\n通行凭证', 'access_record': 'access_record\n出入校记录', 'campus_gate': 'campus_gate\n校门'
-    }
-    for k, box in boxes.items():
-        color = BLUE if k == 'visit_apply' else (RED if k == 'blacklist' else CYAN if k in ['pass_code','access_record','campus_gate'] else GREEN if k == 'approval_record' else '#64748b')
-        d.box(box, labels[k], fill='#ffffff', outline=color, font=FONT_BOLD if k == 'visit_apply' else FONT_SM)
-    d.line((390, 335), (820, 470), label='1:N 提交')
-    d.line((390, 540), (820, 500), label='0:1 关联')
-    d.line((390, 740), (820, 530), label='1:N 包含')
-    d.line((390, 930), (820, 555), color=RED, label='风险检查')
-    d.line((1000, 570), (1000, 700), label='1:N 产生')
-    d.line((1180, 470), (1530, 335), label='1:1 生成')
-    d.line((1180, 540), (1510, 600), label='1:N 登记')
-    d.line((1685, 670), (1685, 820), label='N:1 校门')
-    d.box((760, 980, 1260, 1050), '预约申请是核心实体，连接访客、审批、通行凭证和出入校记录。', fill='#eaf3ff', outline=BLUE, font=FONT_SM)
-    return d.save('er_core_business')
+    for box, title, attrs, color in entities.values():
+        c.entity(box, title, attrs, color)
+    rels = [
+        ('提交', (660, 680), (430, 670), (900, 715), '0..N', '1..1'),
+        ('列入', (280, 500), (275, 430), (275, 580), '0..N', '1..1'),
+        ('拥有', (520, 1010), (430, 1140), (430, 690), '0..N', '1..1'),
+        ('使用车辆', (660, 1090), (430, 1140), (900, 745), '0..N', '0..1'),
+        ('携带', (1070, 940), (1070, 830), (1070, 1040), '1..1', '0..N'),
+        ('接待', (1070, 500), (1070, 410), (1070, 600), '0..N', '1..1'),
+        ('受理', (1360, 520), (1640, 410), (1240, 700), '0..N', '1..1'),
+        ('产生审批', (1360, 1050), (1240, 760), (1460, 1130), '1..1', '0..N'),
+        ('处理', (1640, 820), (1070, 410), (1640, 1040), '0..N', '1..1'),
+        ('生成', (1640, 650), (1240, 700), (2040, 610), '1..1', '0..1'),
+        ('核验登记', (2200, 810), (2200, 700), (2200, 920), '1..1', '0..N'),
+        ('形成记录', (1640, 980), (1240, 760), (2040, 1010), '1..1', '0..N'),
+        ('入校校门', (2200, 1250), (2200, 1140), (2200, 1360), '0..N', '0..1'),
+        ('离校校门', (2500, 1250), (2360, 1040), (2360, 1440), '0..N', '0..1'),
+    ]
+    for name, center, p1, p2, card1, card2 in rels:
+        c.relation(center, 150, 88, name)
+        c.line(p1, (center[0]-75, center[1]) if p1[0] < center[0] else (center[0], center[1]-44), label=card1, arrow=False)
+        end = (center[0]+75, center[1]) if p2[0] > center[0] else (center[0], center[1]+44)
+        if p2[1] < center[1]:
+            end = (center[0], center[1]-44)
+        c.line(end, p2, label=card2, arrow=False)
+    c.note((640, 1540, 2160, 1630), '说明：实体用名词表示，联系用动词表示；预约申请是核心业务实体。图中 1..1 表示必须参与，0..N 表示可选多次参与，0..1 表示可选一次参与。')
+    return c.save('er_core_business')
 
 
 def er_overview():
-    d = Diagram(2100, 1200, '总体简化 E-R 图')
-    d.group((80, 160, 500, 980), '用户权限域', BLUE)
-    d.group((600, 160, 1120, 980), '访客预约域', GREEN)
-    d.group((1220, 160, 1640, 980), '通行核验域', CYAN)
-    d.group((1740, 160, 2020, 980), '系统支撑域', PURPLE)
-    nodes = [
-        ('department', (170,250,410,330)), ('sys_user', (170,420,410,500)), ('sys_role', (170,590,410,670)), ('sys_permission', (145,760,435,840)),
-        ('visitor', (720,250,1000,330)), ('visit_apply', (700,430,1020,530)), ('approval_record', (680,640,1040,740)), ('blacklist', (735,820,985,900)),
-        ('pass_code', (1290,290,1570,370)), ('access_record', (1280,520,1580,620)), ('campus_gate', (1290,760,1570,840)),
-        ('notice', (1790,270,1970,340)), ('operation_log', (1770,440,1995,510)), ('dict_item', (1790,610,1970,680)), ('report_record', (1770,780,1995,850)),
+    c = Canvas(2400, 1400, '总体简化 E-R 图')
+    entities = [
+        ((150, 260, 430, 420), '访客', ['PK id', '身份信息'], BLUE),
+        ((760, 260, 1080, 440), '预约申请', ['PK id', '预约编号', '状态'], BLUE),
+        ((1380, 220, 1700, 400), '审批记录', ['PK id', '环节', '结果'], AMBER),
+        ((1380, 560, 1700, 720), '通行凭证', ['PK id', '通行码'], PURPLE),
+        ((1380, 900, 1700, 1080), '出入校记录', ['PK id', '入校/离校'], PURPLE),
+        ((1960, 900, 2220, 1060), '校门', ['PK id', '名称'], CYAN),
+        ((760, 820, 1080, 1000), '校内用户', ['PK id', '姓名', '角色'], GREEN),
+        ((150, 820, 430, 980), '部门', ['PK id', '名称'], GREEN),
+        ((150, 560, 430, 720), '黑名单', ['PK id', '风险原因'], RED),
     ]
-    for name, box in nodes:
-        d.box(box, name, fill='#ffffff', outline='#64748b', font=FONT_SM)
-    for p1,p2,label in [
-        ((290,330),(290,420),'包含用户'), ((290,500),(290,590),'用户角色'), ((290,670),(290,760),'角色权限'),
-        ((1000,290),(1290,330),'生成凭证'), ((1020,490),(1280,570),'产生记录'), ((1430,620),(1430,760),'关联校门'),
-        ((1000,330),(1000,430),'提交预约'), ((860,530),(860,640),'审批过程'), ((735,860),(700,500),'风险检查'),
-        ((410,460),(700,470),'被访/审批'), ((410,460),(1770,470),'记录操作'), ((1020,470),(1790,305),'发送通知')
-    ]:
-        d.line(p1,p2,label=label)
-    return d.save('er_overview')
+    for box, title, attrs, color in entities:
+        c.entity(box, title, attrs, color)
+    rels = [
+        ('提交', (600,350), (430,340), (760,350), '0..N', '1..1'),
+        ('风险约束', (600,640), (430,640), (760,360), '0..N', '0..N'),
+        ('接待', (920,620), (920,820), (920,440), '0..N', '1..1'),
+        ('管理范围', (600,910), (430,900), (760,900), '1..N', '1..1'),
+        ('产生', (1230,350), (1080,350), (1380,310), '1..1', '0..N'),
+        ('生成', (1230,620), (1080,390), (1380,640), '1..1', '0..1'),
+        ('登记', (1230,980), (1080,390), (1380,990), '1..1', '0..N'),
+        ('发生于', (1840,990), (1700,990), (1960,980), '0..N', '0..1'),
+    ]
+    for name, center, p1, p2, a, b in rels:
+        c.relation(center, 145, 84, name)
+        c.line(p1, center, label=a, arrow=False)
+        c.line(center, p2, label=b, arrow=False)
+    c.note((520, 1180, 1880, 1260), '总体图仅保留主干实体和核心联系，用于说明访客预约、审批、通行、出入校和组织权限之间的整体约束。')
+    return c.save('er_overview')
 
 
 def er_user_permission():
-    d = Diagram(1700, 800, '用户权限 E-R 图')
-    nodes = [
-        ('department\n部门', (80, 330, 300, 440), BLUE),
-        ('sys_user\n系统用户', (430, 330, 670, 440), BLUE),
-        ('sys_user_role\n用户角色', (800, 330, 1060, 440), PURPLE),
-        ('sys_role\n角色', (1190, 200, 1430, 310), PURPLE),
-        ('sys_role_permission\n角色权限', (1160, 480, 1460, 590), AMBER),
-        ('sys_permission\n权限', (1510, 480, 1660, 590), AMBER),
-    ]
-    for text, box, color in nodes:
-        d.box(box, text, outline=color, fill='#ffffff', font=FONT_SM)
-    d.line((300,385),(430,385), label='1:N')
-    d.line((670,385),(800,385), label='1:N')
-    d.line((1060,385),(1190,255), label='N:1')
-    d.line((1310,310),(1310,480), label='1:N')
-    d.line((1460,535),(1510,535), label='N:1')
-    d.box((500,650,1220,720), '通过用户角色表和角色权限表实现多对多授权，保证不同岗位只能访问相应功能。', fill='#eef6ff', outline=BLUE, font=FONT_SM)
-    return d.save('er_user_permission')
+    c = Canvas(2300, 1250, '用户权限 E-R 图')
+    entities = {
+        'dept': ((120, 500, 430, 690), '部门 department', ['PK id', '部门名称', '部门编码'], GREEN),
+        'user': ((720, 500, 1050, 720), '系统用户 sys_user', ['PK id', '账号', '姓名', '用户状态'], BLUE),
+        'role': ((1320, 230, 1650, 450), '角色 sys_role', ['PK id', '角色编码', '角色名称'], PURPLE),
+        'perm': ((1320, 780, 1650, 1010), '权限 sys_permission', ['PK id', '权限编码', '权限名称', '权限类型'], AMBER),
+    }
+    for box, title, attrs, color in entities.values():
+        c.entity(box, title, attrs, color)
+    c.relation((570, 610), 150, 88, '包含')
+    c.line((430,610),(495,610),label='1..1',arrow=False)
+    c.line((645,610),(720,610),label='0..N',arrow=False)
+    c.relation((1180, 445), 150, 88, '分配')
+    c.line((1050,610),(1180,489),label='0..N',arrow=False)
+    c.line((1180,401),(1320,340),label='0..N',arrow=False)
+    c.relation((1180, 820), 150, 88, '授权')
+    c.line((1485,450),(1180,776),label='0..N',arrow=False)
+    c.line((1180,864),(1320,895),label='0..N',arrow=False)
+    c.relation((1860, 610), 150, 88, '父子权限')
+    c.line((1650,895),(1785,610),label='0..N 子权限',arrow=False)
+    c.line((1935,610),(1650,895),label='0..1 父权限',arrow=False)
+    c.note((760, 1060, 1660, 1135), '说明：用户与角色、角色与权限均为 M:N 联系，逻辑结构中分别转换为 sys_user_role 和 sys_role_permission。')
+    return c.save('er_user_permission')
 
 
 def er_system_support():
-    d = Diagram(1700, 900, '系统支撑 E-R 图')
-    nodes = [
-        ('sys_user\n系统用户', (710, 170, 990, 280), BLUE),
-        ('notice\n通知消息', (180, 390, 440, 500), GREEN),
-        ('operation_log\n操作日志', (590, 390, 870, 500), AMBER),
-        ('screenshot_record\n截图记录', (1030, 390, 1330, 500), CYAN),
-        ('report_record\n报告记录', (1340, 620, 1600, 730), CYAN),
-        ('dict_type\n字典类型', (250, 650, 520, 760), PURPLE),
-        ('dict_item\n字典项', (660, 650, 930, 760), PURPLE),
+    c = Canvas(2200, 1250, '系统支撑 E-R 图')
+    entities = [
+        ((900, 180, 1240, 380), '系统用户 sys_user', ['PK id', '账号', '姓名'], BLUE),
+        ((180, 520, 500, 710), '通知 notice', ['PK id', '标题', '阅读状态'], GREEN),
+        ((700, 520, 1040, 720), '操作日志 operation_log', ['PK id', '模块', '操作结果', '操作时间'], AMBER),
+        ((1220, 520, 1580, 720), '截图记录 screenshot_record', ['PK id', '截图编码', '生成状态'], CYAN),
+        ((1680, 520, 2020, 720), '报告记录 report_record', ['PK id', '报告编码', '生成状态'], CYAN),
+        ((500, 900, 820, 1080), '字典类型 dict_type', ['PK id', '类型编码', '类型名称'], PURPLE),
+        ((1060, 900, 1380, 1080), '字典项 dict_item', ['PK id', '字典编码', '字典值'], PURPLE),
     ]
-    for text, box, color in nodes:
-        d.box(box, text, fill='#ffffff', outline=color, font=FONT_SM)
-    d.line((850,280),(310,390), label='接收/发布')
-    d.line((850,280),(730,390), label='产生')
-    d.line((850,280),(1180,390), label='触发')
-    d.line((1180,500),(1470,620), label='支撑报告')
-    d.line((520,705),(660,705), label='1:N')
-    d.box((470, 805, 1240, 860), '系统支撑实体用于消息提醒、操作审计、字典维护、截图记录和报告生成留痕。', fill='#f8fafc', outline='#94a3b8', font=FONT_SM)
-    return d.save('er_system_support')
+    for box, title, attrs, color in entities:
+        c.entity(box, title, attrs, color)
+    for name, center, p1, p2, a, b in [
+        ('接收', (610,455), (1070,380), (500,610), '0..N', '0..1'),
+        ('产生', (900,455), (1070,380), (870,520), '0..N', '0..1'),
+        ('创建截图', (1390,455), (1070,380), (1400,520), '0..N', '0..1'),
+        ('生成报告', (1710,455), (1070,380), (1850,520), '0..N', '0..1'),
+        ('包含', (940,990), (820,990), (1060,990), '1..1', '0..N'),
+    ]:
+        c.relation(center, 150, 88, name)
+        c.line(p1, center, label=a, arrow=False)
+        c.line(center, p2, label=b, arrow=False)
+    c.note((560, 1120, 1640, 1190), '说明：支撑实体不参与预约主流程，但用于消息提醒、操作审计、字典维护、截图留痕和报告生成记录。')
+    return c.save('er_system_support')
 
 
 def system_module():
-    d = Diagram(2200, 1400, '系统功能模块图')
-    d.box((760, 145, 1440, 235), '重庆邮电大学智慧访客预约与出入校管理系统', fill='#eaf3ff', outline=BLUE, font=FONT_BOLD)
+    c = Canvas(2400, 1450, '系统功能模块图')
+    c.process((760, 150, 1640, 240), '重庆邮电大学智慧访客预约与出入校管理系统')
     modules = [
-        ('访客端', ['访客预约','状态查询','通行凭证','历史记录'], BLUE),
-        ('被访人端', ['待确认预约','确认预约','拒绝预约','接待记录'], CYAN),
-        ('审批管理', ['部门待审批','审批通过','审批拒绝','审批轨迹'], PURPLE),
-        ('门岗管理', ['通行码核验','入校登记','离校登记','当前在校','超时未离校'], GREEN),
-        ('访客记录', ['预约记录查询','出入校记录','车辆随行人员','审批记录'], '#64748b'),
-        ('安全管理', ['黑名单管理','风险检查','异常处理','日志审计'], RED),
-        ('统计报表', ['访客概览','趋势分析','部门排行','校门统计','审批分析'], AMBER),
-        ('系统管理', ['用户管理','角色权限','部门管理','校门管理','字典管理'], '#0f766e'),
-        ('自动化支撑', ['自动截图','截图清单','报告生成','报告记录'], '#9333ea'),
+        ('访客端', ['访客预约', '状态查询', '通行凭证', '历史记录'], BLUE),
+        ('被访人端', ['待确认预约', '确认预约', '拒绝预约', '接待记录'], CYAN),
+        ('审批管理', ['部门待审批', '审批通过', '审批拒绝', '审批轨迹'], PURPLE),
+        ('门岗管理', ['通行码核验', '入校登记', '离校登记', '当前在校', '超时未离校'], GREEN),
+        ('访客记录', ['预约记录查询', '出入校记录', '车辆随行人员', '审批记录'], MUTED),
+        ('安全管理', ['黑名单管理', '风险检查', '异常处理', '日志审计'], RED),
+        ('统计报表', ['访客概览', '趋势分析', '部门排行', '校门统计', '审批分析'], AMBER),
+        ('系统管理', ['用户管理', '角色权限', '部门管理', '校门管理', '字典管理'], '#0f766e'),
     ]
-    start_x, start_y = 80, 360
-    col_w, row_h = 220, 120
-    gap_x = 20
+    x0, y0, col_w, gap = 90, 360, 260, 24
     for i, (name, subs, color) in enumerate(modules):
-        x = start_x + i * (col_w + gap_x)
-        d.box((x, start_y, x + col_w, start_y + 82), name, fill='#ffffff', outline=color, font=FONT_BOLD)
-        d.line((1100, 235), (x + col_w // 2, start_y), color=color)
-        y = start_y + 130
+        x = x0 + i * (col_w + gap)
+        c.process((x, y0, x + col_w, y0 + 78), name)
+        c.line((1200, 240), (x + col_w/2, y0), color=color, arrow=False)
+        y = y0 + 120
         for sub in subs:
-            d.box((x, y, x + col_w, y + 76), sub, fill='#f8fafc', outline='#cbd5e1', font=FONT_SM, radius=12, width=2)
-            d.line((x + col_w // 2, start_y + 82), (x + col_w // 2, y), color='#94a3b8', width=2)
-            y += 92
-    return d.save('system_module')
+            c.process((x, y, x + col_w, y + 68), sub)
+            c.line((x + col_w/2, y0 + 78), (x + col_w/2, y), color='#94a3b8', arrow=False, width=2)
+            y += 82
+    return c.save('system_module')
 
 
 def visitor_workflow():
-    d = Diagram(2100, 1000, '访客预约审批流程图')
+    c = Canvas(2300, 1120, '访客预约审批流程图')
     steps = [
-        ('访客提交预约', (90, 430, 310, 520), BLUE),
-        ('黑名单检查', (420, 430, 640, 520), RED),
-        ('被访人确认', (750, 430, 970, 520), CYAN),
-        ('部门审批', (1080, 430, 1300, 520), PURPLE),
-        ('生成通行码', (1410, 430, 1630, 520), GREEN),
-        ('门岗核验', (1740, 430, 1960, 520), AMBER),
+        ('访客提交预约', (120, 460, 360, 550), BLUE),
+        ('黑名单检查', (480, 460, 720, 550), RED),
+        ('被访人确认', (840, 460, 1080, 550), CYAN),
+        ('部门审批', (1200, 460, 1440, 550), PURPLE),
+        ('生成通行码', (1560, 460, 1800, 550), GREEN),
+        ('门岗核验', (1920, 460, 2160, 550), AMBER),
     ]
     for text, box, color in steps:
-        d.box(box, text, outline=color, fill='#ffffff', font=FONT_SM)
-    for a,b in zip(steps, steps[1:]):
-        d.line((a[1][2],475),(b[1][0],475))
-    lower = [('入校登记',(1410,700,1630,790),GREEN),('离校登记',(1080,700,1300,790),GREEN),('访问记录归档',(750,700,970,790),BLUE),('查询统计',(420,700,640,790),BLUE)]
-    for text, box, color in lower:
-        d.box(box,text,outline=color,fill='#ffffff',font=FONT_SM)
-    d.line((1850,520),(1520,700),label='允许入校')
-    d.line((1410,745),(1300,745))
-    d.line((1080,745),(970,745))
-    d.line((750,745),(640,745))
-    rejects = [('黑名单拦截',(420,220,640,300)),('被访人拒绝',(750,220,970,300)),('审批拒绝/退回',(1080,220,1300,300)),('通行码过期',(1740,220,1960,300)),('超时未离校预警',(1410,850,1710,930))]
-    for text, box in rejects:
-        d.box(box,text,outline=RED,fill='#fff1f2',font=FONT_SM)
-    d.line((530,430),(530,300),color=RED)
-    d.line((860,430),(860,300),color=RED)
-    d.line((1190,430),(1190,300),color=RED)
-    d.line((1850,430),(1850,300),color=RED)
-    d.line((1520,790),(1560,850),color=RED)
-    return d.save('visitor_workflow')
+        c.process(box, text)
+    for a, b in zip(steps, steps[1:]):
+        c.line((a[1][2], 505), (b[1][0], 505), label='通过')
+    exceptions = [('黑名单拦截', (480,250,720,330), RED), ('被访人拒绝', (840,250,1080,330), RED), ('审批拒绝/退回', (1200,250,1440,330), RED), ('通行码过期', (1920,250,2160,330), RED)]
+    for text, box, color in exceptions:
+        c.process(box, text)
+        c.line(((box[0]+box[2])//2, 460), ((box[0]+box[2])//2, box[3]), color=color, label='异常')
+    bottom = [('入校登记', (1560,760,1800,850), GREEN), ('离校登记', (1200,760,1440,850), GREEN), ('访问记录归档', (840,760,1080,850), BLUE), ('查询统计', (480,760,720,850), BLUE)]
+    for text, box, color in bottom:
+        c.process(box, text)
+    c.line((2040,550),(1680,760),label='允许入校')
+    c.line((1560,805),(1440,805))
+    c.line((1200,805),(1080,805))
+    c.line((840,805),(720,805))
+    c.process((1560,940,1860,1020), '超时未离校预警')
+    c.line((1680,850),(1710,940),color=RED,label='超时')
+    return c.save('visitor_workflow')
 
 
 def gate_check_workflow():
-    d = Diagram(1900, 950, '门岗核验与入校流程图')
-    steps = [
-        ('输入通行码/手机号/证件号', (80,400,360,500), BLUE),
-        ('查询预约与凭证', (480,400,730,500), CYAN),
-        ('校验审批状态', (850,400,1100,500), PURPLE),
-        ('校验访问时间', (1220,400,1470,500), AMBER),
-        ('黑名单复核', (1590,400,1820,500), RED),
-    ]
-    for text,box,color in steps:
-        d.box(box,text,outline=color,fill='#ffffff',font=FONT_SM)
-    for a,b in zip(steps, steps[1:]):
-        d.line((a[1][2],450),(b[1][0],450))
-    d.box((1220,680,1470,780),'允许入校\n写入入校记录',outline=GREEN,fill='#f0fdf4',font=FONT_SM)
-    d.box((820,680,1100,780),'拒绝入校\n记录异常原因',outline=RED,fill='#fff1f2',font=FONT_SM)
-    d.box((1530,680,1810,780),'离校登记\n更新访问状态',outline=GREEN,fill='#f0fdf4',font=FONT_SM)
-    d.line((1705,500),(1345,680),label='核验通过')
-    d.line((1345,780),(1530,730),label='访问结束')
-    for x in [975,1345,1705]:
-        d.line((x,400),(960,680),color=RED,label='异常')
-    d.box((500, 180, 1380, 280), '门岗核验必须同时满足审批通过、凭证有效、访问时间有效、未命中黑名单等条件。', fill='#eaf3ff', outline=BLUE, font=FONT_SM)
-    return d.save('gate_check_workflow')
+    c = Canvas(2100, 1050, '门岗核验入校流程图')
+    steps = [('输入凭证信息',(120,430,390,520)),('查询预约与凭证',(520,430,790,520)),('检查审批状态',(920,430,1190,520)),('检查有效时间',(1320,430,1590,520)),('黑名单复核',(1720,430,1970,520))]
+    for text, box in steps:
+        c.process(box, text)
+    for a,b in zip(steps,steps[1:]):
+        c.line((a[1][2],475),(b[1][0],475))
+    c.process((1320,720,1590,810),'入校登记')
+    c.process((1720,720,1970,810),'离校登记')
+    c.process((920,720,1190,810),'拒绝入校\n记录原因')
+    c.line((1845,520),(1455,720),label='通过')
+    c.line((1590,765),(1720,765),label='离校')
+    for x in [1055,1455,1845]:
+        c.line((x,520),(1055,720),color=RED,label='不通过')
+    c.note((560,180,1540,270),'门岗核验必须同时满足审批通过、凭证有效、访问时间有效、未命中黑名单等条件。')
+    return c.save('gate_check_workflow')
 
 
 def system_architecture():
-    d = Diagram(1900, 1050, '系统架构图')
-    d.box((120,220,460,340),'浏览器前端\nVue 3 / Element Plus / ECharts',outline=BLUE,fill='#ffffff',font=FONT_SM)
-    d.box((760,220,1140,340),'Spring Boot 后端\n认证授权 / 业务服务 / REST API',outline=GREEN,fill='#ffffff',font=FONT_SM)
-    d.box((1450,220,1780,340),'MySQL 数据库\n业务表 / 权限表 / 日志表',outline=AMBER,fill='#ffffff',font=FONT_SM)
-    d.box((760,520,1140,640),'Playwright 自动截图\n登录访问核心页面',outline=CYAN,fill='#ffffff',font=FONT_SM)
-    d.box((1450,520,1780,640),'截图与图形资源\nscreenshots / diagrams',outline=PURPLE,fill='#ffffff',font=FONT_SM)
-    d.box((760,800,1140,920),'LaTeX 报告生成\n章节 / SQL / 截图 / 图表',outline=RED,fill='#ffffff',font=FONT_SM)
-    d.line((460,280),(760,280),label='HTTP / API')
-    d.line((1140,280),(1450,280),label='SQL / ORM')
-    d.line((950,520),(950,340),label='调用页面')
-    d.line((1140,580),(1450,580),label='生成图片')
-    d.line((1615,640),(1140,850),label='插入报告')
-    d.line((950,640),(950,800),label='截图说明')
-    d.box((200,760,520,880),'课程设计交付\n系统代码、数据库脚本、截图、PDF 报告',outline=BLUE,fill='#eaf3ff',font=FONT_SM)
-    d.line((760,860),(520,820),label='汇总提交')
-    return d.save('system_architecture')
+    c = Canvas(2100, 1100, '系统架构图')
+    c.process((140,240,520,360),'浏览器前端\nVue 3 / Element Plus / ECharts')
+    c.process((860,240,1240,360),'Spring Boot 后端\n认证授权 / 业务服务 / REST API')
+    c.process((1580,240,1940,360),'MySQL 数据库\n业务表 / 权限表 / 日志表')
+    c.process((860,560,1240,680),'运行界面采集\n自动访问核心页面')
+    c.process((1580,560,1940,680),'图表与截图资源\n设计图 / 运行截图')
+    c.process((860,850,1240,970),'LaTeX 课程报告\n章节 / SQL / 图表 / 截图')
+    c.line((520,300),(860,300),label='HTTP API')
+    c.line((1240,300),(1580,300),label='SQL')
+    c.line((1050,560),(1050,360),label='访问页面')
+    c.line((1240,620),(1580,620),label='生成素材')
+    c.line((1760,680),(1240,910),label='插入报告')
+    return c.save('system_architecture')
 
 
 def table_relation():
-    d = Diagram(2200, 1300, '数据库表关系图')
-    groups = [
-        ('权限基础表', (80,160,560,520), BLUE, ['department','sys_user','sys_role','sys_permission','sys_user_role','sys_role_permission']),
-        ('访客预约表', (680,160,1220,620), GREEN, ['visitor','visitor_vehicle','visitor_companion','visit_apply','approval_record','blacklist']),
-        ('通行记录表', (1340,160,1780,580), CYAN, ['pass_code','access_record','campus_gate']),
-        ('系统支撑表', (80,760,720,1120), PURPLE, ['notice','operation_log','dict_type','dict_item','screenshot_record','report_record']),
+    c = Canvas(2400, 1450, '数据库表关系图')
+    tables = [
+        ('department', (130,220,420,300)), ('sys_user', (130,360,420,440)), ('sys_role', (130,500,420,580)), ('sys_permission', (130,640,420,720)),
+        ('sys_user_role', (520,430,830,510)), ('sys_role_permission', (520,610,860,690)),
+        ('visitor', (1040,220,1320,300)), ('visitor_vehicle', (1040,390,1320,470)), ('visit_apply', (1040,570,1320,650)), ('visitor_companion', (1040,750,1320,830)),
+        ('approval_record', (1440,570,1760,650)), ('pass_code', (1440,750,1760,830)), ('access_record', (1440,930,1760,1010)), ('campus_gate', (1900,930,2180,1010)), ('blacklist', (1040,930,1320,1010)),
+        ('notice', (520,1020,830,1100)), ('operation_log', (520,1160,830,1240)), ('dict_type', (1040,1160,1320,1240)), ('dict_item', (1440,1160,1760,1240)),
     ]
-    positions = {}
-    for title, area, color, tables in groups:
-        d.group(area,title,color)
-        x1,y1,x2,y2 = area
-        col_w = (x2-x1-60)//2
-        for i,t in enumerate(tables):
-            x = x1+30+(i%2)*(col_w+20)
-            y = y1+70+(i//2)*90
-            box=(x,y,x+col_w,y+58)
-            positions[t]=box
-            d.box(box,t,outline='#94a3b8',fill='#ffffff',font=FONT_XS,radius=10,width=2)
-    def center(t):
-        b=positions[t]; return ((b[0]+b[2])//2,(b[1]+b[3])//2)
-    links=[('department','sys_user'),('sys_user','sys_user_role'),('sys_role','sys_user_role'),('sys_role','sys_role_permission'),('sys_permission','sys_role_permission'),('visitor','visit_apply'),('visit_apply','visitor_vehicle'),('visit_apply','visitor_companion'),('visit_apply','approval_record'),('visitor','blacklist'),('visit_apply','pass_code'),('visit_apply','access_record'),('campus_gate','access_record'),('sys_user','operation_log'),('dict_type','dict_item'),('screenshot_record','report_record')]
+    pos = {}
+    for name, box in tables:
+        pos[name]=box
+        c.process(box, name)
+    def mid(name):
+        b=pos[name]; return ((b[0]+b[2])//2,(b[1]+b[3])//2)
+    links = [('department','sys_user'),('sys_user','sys_user_role'),('sys_role','sys_user_role'),('sys_role','sys_role_permission'),('sys_permission','sys_role_permission'),('visitor','visitor_vehicle'),('visitor','visit_apply'),('visitor_vehicle','visit_apply'),('visit_apply','visitor_companion'),('visit_apply','approval_record'),('visit_apply','pass_code'),('visit_apply','access_record'),('pass_code','access_record'),('visitor','blacklist'),('campus_gate','access_record'),('sys_user','notice'),('sys_user','operation_log'),('dict_type','dict_item')]
     for a,b in links:
-        d.line(center(a), center(b), color='#64748b', width=2)
-    d.box((920, 900, 1660, 1040), '表关系围绕预约申请展开：权限表控制访问边界，访客预约表记录业务过程，通行记录表沉淀出入校事实，系统支撑表完成日志、字典、截图和报告留痕。', fill='#f8fafc', outline='#94a3b8', font=FONT_SM)
-    return d.save('table_relation')
+        c.line(mid(a), mid(b), arrow=False, width=2, color='#64748b')
+    c.note((620,1340,1780,1400),'说明：表关系图属于逻辑结构补充，用于展示主外键依赖；概念 E-R 图以实体和联系为主。')
+    return c.save('table_relation')
 
 
 def automation_report_workflow():
-    d = Diagram(1800, 900, '自动截图与报告生成流程图')
-    steps = [('初始化演示数据',(90,390,330,490),BLUE),('启动后端服务',(450,390,690,490),GREEN),('启动前端服务',(810,390,1050,490),CYAN),('Playwright 截图',(1170,390,1410,490),PURPLE),('生成 LaTeX 报告',(1530,390,1740,490),RED)]
-    for text,box,color in steps:
-        d.box(box,text,outline=color,fill='#ffffff',font=FONT_SM)
+    c = Canvas(1900, 900, '自动截图与报告生成流程图')
+    steps = [('初始化演示数据',(100,390,360,480)),('启动后端服务',(470,390,730,480)),('启动前端服务',(840,390,1100,480)),('采集运行界面',(1210,390,1470,480)),('生成课程报告',(1580,390,1810,480))]
+    for text, box in steps:
+        c.process(box, text)
     for a,b in zip(steps,steps[1:]):
-        d.line((a[1][2],440),(b[1][0],440))
-    d.box((1170,650,1410,740),'运行截图\n19 个核心页面',outline=PURPLE,fill='#faf5ff',font=FONT_SM)
-    d.box((1530,650,1740,740),'PDF 报告\n图表与截图',outline=RED,fill='#fff1f2',font=FONT_SM)
-    d.line((1290,490),(1290,650),label='输出')
-    d.line((1410,695),(1530,695),label='插入')
-    d.box((430,160,1370,260),'自动化流程保证数据库演示数据、前端页面截图和最终课程设计报告保持一致。',fill='#eaf3ff',outline=BLUE,font=FONT_SM)
-    return d.save('automation_report_workflow')
+        c.line((a[1][2],435),(b[1][0],435))
+    c.note((420,160,1480,250),'自动化流程用于保证演示数据、运行截图、设计图和最终报告之间的一致性。')
+    return c.save('automation_report_workflow')
 
 
 def generate_all(root=None):
     EXPORT_DIR.mkdir(parents=True, exist_ok=True)
     FIGURE_DIR.mkdir(parents=True, exist_ok=True)
-    data_flow_level0(); data_flow_level1(); er_core_business(); er_overview(); er_user_permission(); er_system_support()
-    system_module(); visitor_workflow(); gate_check_workflow(); system_architecture(); table_relation(); automation_report_workflow()
+    data_flow_level0()
+    data_flow_level1()
+    er_overview()
+    er_core_business()
+    er_user_permission()
+    er_system_support()
+    system_module()
+    visitor_workflow()
+    gate_check_workflow()
+    system_architecture()
+    table_relation()
+    automation_report_workflow()
 
 
 if __name__ == '__main__':
     generate_all()
-    print('generated report diagram images in', EXPORT_DIR)
+    print('generated improved report diagram images in', EXPORT_DIR)
