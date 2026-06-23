@@ -1,11 +1,11 @@
-<template>
+﻿<template>
   <section>
-    <PageHeader title="统计报表页" description="面向课程设计报告和答辩展示，汇总访客趋势、部门排行、校门通行和审批通过率。">
+    <PageHeader title="统计报表" description="展示访客规模、审批效率、校门通行、访问事由、风险名单和系统操作情况。">
       <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadData">刷新报表</el-button>
     </PageHeader>
 
     <div class="dashboard-grid">
-      <div class="metric-card" v-for="item in cards" :key="item.label">
+      <div v-for="item in metrics" :key="item.label" class="metric-card">
         <div class="metric-icon"><el-icon><component :is="item.icon" /></el-icon></div>
         <div>
           <div class="metric-label">{{ item.label }}</div>
@@ -16,47 +16,97 @@
     </div>
 
     <div class="dashboard-charts">
-      <div class="chart-card"><div class="card-title"><span>近七天访客趋势</span></div><div ref="trendRef" class="chart-box"></div></div>
-      <div class="chart-card"><div class="card-title"><span>审批通过率</span></div><div ref="approvalRef" class="chart-box"></div></div>
+      <div class="chart-card">
+        <div class="card-title"><span>近七天访客趋势</span><el-tag type="primary" effect="plain">趋势</el-tag></div>
+        <div ref="trendRef" class="chart-box"></div>
+      </div>
+      <div class="chart-card">
+        <div class="card-title"><span>部门访客排行</span><el-tag type="success" effect="plain">本月</el-tag></div>
+        <div ref="deptRef" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="dashboard-charts" style="margin-top: 14px">
+      <div class="chart-card">
+        <div class="card-title"><span>校门通行统计</span><el-tag type="info" effect="plain">入校/离校</el-tag></div>
+        <div ref="gateRef" class="chart-box"></div>
+      </div>
+      <div class="chart-card">
+        <div class="card-title"><span>访问事由分布</span><el-tag type="warning" effect="plain">本月</el-tag></div>
+        <div ref="reasonRef" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="dashboard-charts" style="margin-top: 14px">
+      <div class="chart-card">
+        <div class="card-title"><span>审批状态分布</span><el-tag type="success" effect="plain">预约状态</el-tag></div>
+        <div ref="approvalStatusRef" class="chart-box"></div>
+      </div>
+      <div class="chart-card">
+        <div class="card-title"><span>入校离校状态分布</span><el-tag type="danger" effect="plain">通行状态</el-tag></div>
+        <div ref="accessStatusRef" class="chart-box"></div>
+      </div>
     </div>
 
     <div class="two-column" style="margin-top: 14px">
-      <div class="chart-card"><div class="card-title"><span>部门访客排行</span></div><div ref="deptRef" class="chart-box"></div></div>
-      <div class="chart-card"><div class="card-title"><span>校门通行统计</span></div><div ref="gateRef" class="chart-box"></div></div>
+      <div class="chart-card">
+        <div class="card-title"><span>黑名单风险数量</span><el-tag type="danger" effect="plain">风险等级</el-tag></div>
+        <div ref="blacklistRef" class="chart-box"></div>
+      </div>
+      <div class="detail-card">
+        <div class="card-title"><span>最近操作日志</span><el-tag type="info" effect="plain">实时审计</el-tag></div>
+        <el-table :data="recentLogs" height="300" size="small" empty-text="暂无操作日志">
+          <el-table-column prop="operationTime" label="时间" width="150" />
+          <el-table-column prop="operatorName" label="操作人" width="96" />
+          <el-table-column prop="moduleName" label="模块" width="110" />
+          <el-table-column prop="operationType" label="操作" width="110" />
+          <el-table-column prop="operationResult" label="结果" width="88">
+            <template #default="{ row }">
+              <el-tag :type="row.operationResult === 'SUCCESS' ? 'success' : 'danger'" effect="plain">{{ row.operationResult }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="requestUrl" label="接口地址" min-width="180" show-overflow-tooltip />
+        </el-table>
+      </div>
     </div>
   </section>
 </template>
+
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue'
 import * as echarts from 'echarts'
-import { Aim, Bell, Refresh, UserFilled, WarningFilled } from '@element-plus/icons-vue'
+import { Aim, Bell, Refresh, TrendCharts, UserFilled, WarningFilled } from '@element-plus/icons-vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { loadStatisticsDashboard } from '@/api/statistics'
 
+const loading = ref(false)
+const dashboard = ref({})
 const trendRef = ref()
-const approvalRef = ref()
 const deptRef = ref()
 const gateRef = ref()
-const loading = ref(false)
-const report = ref(defaultReport())
-const cards = computed(() => {
-  const overview = report.value.overview || {}
-  return [
-    { label: '今日访客', value: overview.todayVisitors ?? 0, hint: '按计划访问时间统计', icon: UserFilled },
-    { label: '当前在校', value: overview.currentVisitors ?? 0, hint: '门岗实时登记数据', icon: Aim },
-    { label: '超时未离校', value: overview.overtimeVisitors ?? 0, hint: '需要安保人员跟进', icon: WarningFilled },
-    { label: '待处理审批', value: overview.pendingApprovals ?? 0, hint: '被访人确认和部门审批', icon: Bell }
-  ]
-})
+const reasonRef = ref()
+const approvalStatusRef = ref()
+const accessStatusRef = ref()
+const blacklistRef = ref()
+
+const overview = computed(() => dashboard.value?.overview || {})
+const recentLogs = computed(() => dashboard.value?.recentLogs || [])
+const metrics = computed(() => [
+  { label: '今日访客数', value: overview.value.todayVisitors ?? 0, hint: '今日计划来访总量', icon: UserFilled },
+  { label: '本周访客数', value: overview.value.thisWeekVisitors ?? 0, hint: '本周预约访问规模', icon: TrendCharts },
+  { label: '本月访客数', value: overview.value.thisMonthVisitors ?? 0, hint: '本月预约访问规模', icon: TrendCharts },
+  { label: '当前在校', value: overview.value.currentVisitors ?? 0, hint: '已入校未离校人员', icon: Aim },
+  { label: '超时未离校', value: overview.value.overtimeVisitors ?? 0, hint: '需要安保跟进', icon: WarningFilled },
+  { label: '待审批预约', value: overview.value.pendingApprovals ?? 0, hint: '待确认和待部门审批', icon: Bell },
+  { label: '黑名单风险', value: overview.value.blacklistRiskCount ?? 0, hint: '当前生效风险人员', icon: WarningFilled }
+])
 
 onMounted(loadData)
 
 async function loadData() {
   loading.value = true
   try {
-    report.value = await loadStatisticsDashboard()
-  } catch (error) {
-    report.value = defaultReport()
+    dashboard.value = await loadStatisticsDashboard()
   } finally {
     loading.value = false
   }
@@ -65,47 +115,73 @@ async function loadData() {
 }
 
 function renderCharts() {
-  const colors = ['#1d4ed8', '#06b6d4', '#16a34a', '#f59e0b', '#dc2626']
-  const trend = report.value.trend || []
-  const dept = report.value.departmentRank || []
-  const gates = report.value.gateSummary || []
-  const approval = report.value.approvalRate || {}
-
-  echarts.init(trendRef.value).setOption({
-    color: colors, tooltip: {}, grid: { left: 36, right: 18, top: 24, bottom: 28 },
-    xAxis: { type: 'category', data: trend.map((i) => i.date) }, yAxis: { type: 'value' },
+  const colors = ['#1d4ed8', '#06b6d4', '#16a34a', '#f59e0b', '#dc2626', '#7c3aed', '#0f766e', '#64748b']
+  const trend = dashboard.value?.trend || []
+  renderChart(trendRef.value, {
+    color: colors,
+    tooltip: { trigger: 'axis' },
+    grid: { left: 36, right: 18, top: 30, bottom: 28 },
+    xAxis: { type: 'category', data: trend.map((i) => i.date) },
+    yAxis: { type: 'value', minInterval: 1 },
     series: [{ name: '访客数', type: 'line', smooth: true, areaStyle: {}, data: trend.map((i) => i.count) }]
   })
-  echarts.init(approvalRef.value).setOption({
-    color: colors, tooltip: { trigger: 'item' },
-    series: [{ type: 'pie', radius: ['48%', '72%'], data: [
-      { name: '审批通过', value: approval.approved || 0 },
-      { name: '审批拒绝', value: approval.rejected || 0 },
-      { name: '待处理', value: approval.pending || 0 }
-    ] }]
+
+  const dept = dashboard.value?.departmentRank || []
+  renderChart(deptRef.value, {
+    color: colors,
+    tooltip: { trigger: 'axis' },
+    grid: { left: 128, right: 18, top: 18, bottom: 28 },
+    xAxis: { type: 'value', minInterval: 1 },
+    yAxis: { type: 'category', data: dept.map((i) => i.departmentName), inverse: true },
+    series: [{ name: '访客数', type: 'bar', data: dept.map((i) => i.count), barWidth: 14 }]
   })
-  echarts.init(deptRef.value).setOption({
-    color: colors, tooltip: {}, grid: { left: 96, right: 18, top: 18, bottom: 28 },
-    xAxis: { type: 'value' }, yAxis: { type: 'category', data: dept.map((i) => i.departmentName) },
-    series: [{ type: 'bar', data: dept.map((i) => i.count), barWidth: 16 }]
-  })
-  echarts.init(gateRef.value).setOption({
-    color: colors, tooltip: { trigger: 'axis' }, legend: { top: 0 }, grid: { left: 36, right: 18, top: 36, bottom: 28 },
-    xAxis: { type: 'category', data: gates.map((i) => i.gateName) }, yAxis: { type: 'value' },
+
+  const gate = dashboard.value?.gateSummary || []
+  renderChart(gateRef.value, {
+    color: colors,
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0 },
+    grid: { left: 48, right: 18, top: 42, bottom: 42 },
+    xAxis: { type: 'category', data: gate.map((i) => i.gateName), axisLabel: { rotate: 20 } },
+    yAxis: { type: 'value', minInterval: 1 },
     series: [
-      { name: '入校', type: 'bar', data: gates.map((i) => i.entryCount) },
-      { name: '离校', type: 'bar', data: gates.map((i) => i.exitCount) }
+      { name: '入校', type: 'bar', data: gate.map((i) => i.entryCount || 0), barWidth: 14 },
+      { name: '离校', type: 'bar', data: gate.map((i) => i.exitCount || 0), barWidth: 14 }
     ]
+  })
+
+  const reasons = dashboard.value?.reasonDistribution || []
+  renderPie(reasonRef.value, '访问事由', reasons.map((i) => ({ name: i.reasonType, value: i.count })), colors)
+
+  const approvalStatuses = dashboard.value?.approvalStatusDistribution || []
+  renderPie(approvalStatusRef.value, '审批状态', approvalStatuses.map((i) => ({ name: i.statusName, value: i.count })), colors)
+
+  const accessStatuses = dashboard.value?.accessStatusDistribution || []
+  renderPie(accessStatusRef.value, '通行状态', accessStatuses.map((i) => ({ name: i.statusName, value: i.count })), colors)
+
+  const blacklist = dashboard.value?.blacklistRisk?.byLevel || []
+  renderChart(blacklistRef.value, {
+    color: colors,
+    tooltip: { trigger: 'axis' },
+    grid: { left: 60, right: 18, top: 28, bottom: 32 },
+    xAxis: { type: 'category', data: blacklist.map((i) => i.levelName) },
+    yAxis: { type: 'value', minInterval: 1 },
+    series: [{ name: '风险数量', type: 'bar', data: blacklist.map((i) => i.count), barWidth: 26 }]
   })
 }
 
-function defaultReport() {
-  return {
-    overview: { todayVisitors: 24, currentVisitors: 8, overtimeVisitors: 2, pendingApprovals: 5, approvalPassRate: 82 },
-    trend: [{ date: '06-16', count: 18 }, { date: '06-17', count: 22 }, { date: '06-18', count: 31 }, { date: '06-19', count: 26 }, { date: '06-20', count: 35 }, { date: '06-21', count: 20 }, { date: '06-22', count: 24 }],
-    departmentRank: [{ departmentName: '计算机科学与技术学院', count: 42 }, { departmentName: '自动化学院', count: 28 }, { departmentName: '软件工程学院', count: 15 }, { departmentName: '通信与信息工程学院', count: 10 }],
-    gateSummary: [{ gateName: '北校门', entryCount: 46, exitCount: 43 }, { gateName: '南校门', entryCount: 31, exitCount: 29 }, { gateName: '东区车行门', entryCount: 18, exitCount: 16 }, { gateName: '西校门', entryCount: 8, exitCount: 7 }],
-    approvalRate: { approved: 82, rejected: 12, pending: 6, passRate: 82 }
-  }
+function renderPie(el, name, data, colors) {
+  renderChart(el, {
+    color: colors,
+    tooltip: { trigger: 'item' },
+    legend: { bottom: 0, type: 'scroll' },
+    series: [{ name, type: 'pie', radius: ['42%', '68%'], center: ['50%', '44%'], data }]
+  })
+}
+
+function renderChart(el, option) {
+  if (!el) return
+  echarts.dispose(el)
+  echarts.init(el).setOption(option)
 }
 </script>

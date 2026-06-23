@@ -1,160 +1,718 @@
 # 系统设计图汇总
 
-本文档汇总“重庆邮电大学智慧访客预约与出入校管理系统”课程设计报告所需的主要 Mermaid 图。图中的模块、实体、表名、角色和状态与当前项目代码、数据库脚本及需求文档保持一致。
+本文档汇总“重庆邮电大学智慧访客预约与出入校管理系统”课程设计报告所需图件。为避免图形过大和线条交叉，E-R 图按业务域拆分，流程图按功能层次拆分，完整主外键表关系图建议作为附录使用。
 
-## 1. 系统功能模块图
+## 报告使用建议
+
+| 推荐位置 | 图文件 | 用途 |
+| --- | --- | --- |
+| 正文 | `diagrams/er_overview.mmd` | 概念结构总体说明 |
+| 正文 | `diagrams/er_core_business.mmd` | 说明访客预约、审批、通行、出入校核心流程 |
+| 正文 | `diagrams/system_module.mmd` | 说明系统功能模块划分 |
+| 正文 | `diagrams/visitor_workflow.mmd` | 说明预约审批业务流程 |
+| 正文 | `diagrams/data_flow_level0.mmd`、`diagrams/data_flow_level1.mmd` | 说明数据流程图 |
+| 附录 | `diagrams/er_user_permission.mmd`、`diagrams/er_system_support.mmd`、`diagrams/table_relation.mmd` | 展示权限、支撑实体和完整表关系 |
+
+## 1. 总体简化 E-R 图
+
+对应文件：`diagrams/er_overview.mmd`
+
+总体简化 E-R 图只保留主要实体和主干关系，用于报告正文快速说明概念模型全貌。图中不展开所有弱关联和审计字段，重点突出访客、预约、审批、通行、权限和系统支撑之间的主联系。
+
+```mermaid
+erDiagram
+  department ||--o{ sys_user : contains
+  sys_user ||--o{ visit_apply : hosts
+  visitor ||--o{ visit_apply : submits
+  department ||--o{ visit_apply : approves_scope
+  visit_apply ||--o{ approval_record : approvals
+  visit_apply ||--o| pass_code : pass
+  pass_code ||--o{ access_record : gate_verify
+  campus_gate ||--o{ access_record : gate
+  visitor ||--o{ blacklist : risk
+  sys_user ||--o{ operation_log : audit
+  sys_user ||--o{ notice : message
+  sys_user ||--o{ sys_user_role : has
+  sys_role ||--o{ sys_user_role : assigned
+  sys_role ||--o{ sys_role_permission : owns
+  sys_permission ||--o{ sys_role_permission : grants
+
+  visitor {
+    bigint id PK
+    string visitor_name
+    string phone
+    string id_number
+  }
+
+  visit_apply {
+    bigint id PK
+    string apply_no
+    bigint visitor_id FK
+    bigint host_user_id FK
+    string apply_status
+    string access_status
+  }
+
+  approval_record {
+    bigint id PK
+    bigint apply_id FK
+    string approval_step
+    string approval_result
+  }
+
+  pass_code {
+    bigint id PK
+    bigint apply_id FK
+    string pass_code
+    string pass_status
+  }
+
+  access_record {
+    bigint id PK
+    bigint apply_id FK
+    bigint entry_gate_id FK
+    string access_status
+  }
+
+  campus_gate {
+    bigint id PK
+    string gate_name
+    string gate_type
+  }
+
+  blacklist {
+    bigint id PK
+    bigint visitor_id FK
+    string level
+    string status
+  }
+
+  department {
+    bigint id PK
+    string dept_name
+  }
+
+  sys_user {
+    bigint id PK
+    string username
+    string real_name
+    string user_type
+  }
+
+  sys_role {
+    bigint id PK
+    string role_code
+  }
+
+  sys_permission {
+    bigint id PK
+    string permission_code
+  }
+
+  sys_user_role {
+    bigint id PK
+    bigint user_id FK
+    bigint role_id FK
+  }
+
+  sys_role_permission {
+    bigint id PK
+    bigint role_id FK
+    bigint permission_id FK
+  }
+
+  notice {
+    bigint id PK
+    bigint receiver_user_id FK
+    string title
+  }
+
+  operation_log {
+    bigint id PK
+    bigint operator_user_id FK
+    string module_name
+  }
+```
+
+## 2. 核心业务 E-R 图
+
+对应文件：`diagrams/er_core_business.mmd`
+
+核心业务 E-R 图围绕访客预约主流程设计，展示访客、车辆、随行人员、预约申请、审批记录、通行凭证、出入校记录、校门和黑名单之间的关系。该图建议放在概念结构设计正文。
+
+```mermaid
+erDiagram
+  visitor ||--o{ visit_apply : submits
+  visitor ||--o{ visitor_vehicle : owns
+  visitor_vehicle ||--o{ visit_apply : selected_by
+  visit_apply ||--o{ visitor_companion : includes
+  visit_apply ||--o{ approval_record : records
+  visit_apply ||--o| pass_code : issues
+  pass_code ||--o{ access_record : verifies
+  visit_apply ||--o{ access_record : archives
+  campus_gate ||--o{ access_record : handles
+  visitor ||--o{ blacklist : risks
+
+  visitor {
+    bigint id PK
+    string visitor_name
+    string id_number UK
+    string phone UK
+    string company
+    string visitor_level
+    string status
+  }
+
+  visitor_vehicle {
+    bigint id PK
+    bigint visitor_id FK
+    string plate_no UK
+    string vehicle_type
+    string color
+    string brand
+    string status
+  }
+
+  visitor_companion {
+    bigint id PK
+    bigint apply_id FK
+    string companion_name
+    string id_number
+    string phone
+    string relation_remark
+  }
+
+  visit_apply {
+    bigint id PK
+    string apply_no UK
+    bigint visitor_id FK
+    bigint host_user_id FK
+    bigint department_id FK
+    string visit_reason
+    string apply_status
+    string access_status
+  }
+
+  approval_record {
+    bigint id PK
+    bigint apply_id FK
+    string approval_step
+    bigint approver_user_id FK
+    string approval_result
+    datetime approval_time
+  }
+
+  pass_code {
+    bigint id PK
+    bigint apply_id FK
+    string pass_code UK
+    datetime valid_from
+    datetime valid_to
+    string pass_status
+    int verify_count
+  }
+
+  access_record {
+    bigint id PK
+    bigint apply_id FK
+    bigint visitor_id FK
+    bigint pass_code_id FK
+    bigint entry_gate_id FK
+    bigint exit_gate_id FK
+    string access_status
+    int overtime_flag
+  }
+
+  campus_gate {
+    bigint id PK
+    string gate_code UK
+    string gate_name
+    string gate_location
+    string gate_type
+    string status
+  }
+
+  blacklist {
+    bigint id PK
+    bigint visitor_id FK
+    string id_number
+    string phone
+    string reason
+    string level
+    string status
+  }
+```
+
+## 3. 用户权限 E-R 图
+
+对应文件：`diagrams/er_user_permission.mmd`
+
+用户权限 E-R 图单独展示组织部门、系统用户、角色、权限以及两张关联表，避免 RBAC 多对多关系干扰核心访客业务图。
+
+```mermaid
+erDiagram
+  department ||--o{ sys_user : contains
+  sys_user ||--o{ sys_user_role : assigned
+  sys_role ||--o{ sys_user_role : maps
+  sys_role ||--o{ sys_role_permission : grants
+  sys_permission ||--o{ sys_role_permission : maps
+
+  department {
+    bigint id PK
+    bigint parent_id FK
+    string dept_code UK
+    string dept_name
+    bigint leader_user_id FK
+    string phone
+    string status
+  }
+
+  sys_user {
+    bigint id PK
+    string username UK
+    string real_name
+    string phone UK
+    bigint department_id FK
+    string user_type
+    string status
+  }
+
+  sys_role {
+    bigint id PK
+    string role_code UK
+    string role_name
+    string role_desc
+    string status
+  }
+
+  sys_permission {
+    bigint id PK
+    string permission_code UK
+    string permission_name
+    string permission_type
+    string route_path
+    string api_path
+    string status
+  }
+
+  sys_user_role {
+    bigint id PK
+    bigint user_id FK
+    bigint role_id FK
+    datetime create_time
+  }
+
+  sys_role_permission {
+    bigint id PK
+    bigint role_id FK
+    bigint permission_id FK
+    datetime create_time
+  }
+```
+
+## 4. 系统支撑 E-R 图
+
+对应文件：`diagrams/er_system_support.mmd`
+
+系统支撑 E-R 图展示通知、日志、字典、截图记录和报告记录。由于这些实体主要服务于消息提醒、审计、自动截图和报告生成，未放入核心业务 E-R 图。
+
+```mermaid
+erDiagram
+  dict_type ||--o{ dict_item : contains
+
+  notice {
+    bigint id PK
+    bigint receiver_user_id FK
+    string receiver_type
+    string title
+    string business_type
+    bigint business_id
+    string read_status
+  }
+
+  operation_log {
+    bigint id PK
+    bigint operator_user_id FK
+    string operator_name
+    string module_name
+    string operation_type
+    string operation_result
+    datetime operation_time
+  }
+
+  dict_type {
+    bigint id PK
+    string type_code UK
+    string type_name
+    string status
+    string remark
+  }
+
+  dict_item {
+    bigint id PK
+    bigint type_id FK
+    string item_code
+    string item_name
+    string item_value
+    string status
+  }
+
+  screenshot_record {
+    bigint id PK
+    string screenshot_code UK
+    string page_name
+    string route_path
+    string role_code
+    string file_path
+    string status
+  }
+
+  report_record {
+    bigint id PK
+    string report_code UK
+    string report_name
+    string markdown_path
+    string word_path
+    string generate_status
+  }
+```
+
+## 5. 数据库表关系图
+
+对应文件：`diagrams/table_relation.mmd`
+
+数据库表关系图面向逻辑结构与主外键说明，覆盖主要外键关系。该图比概念 E-R 图更接近 MySQL 表结构，建议作为报告附录或“其它设计图”。
+
+```mermaid
+erDiagram
+  department ||--o{ sys_user : department_id
+  department ||--o{ visit_apply : department_id
+  sys_user ||--o{ sys_user_role : user_id
+  sys_role ||--o{ sys_user_role : role_id
+  sys_role ||--o{ sys_role_permission : role_id
+  sys_permission ||--o{ sys_role_permission : permission_id
+  visitor ||--o{ visitor_vehicle : visitor_id
+  visitor ||--o{ visit_apply : visitor_id
+  visitor_vehicle ||--o{ visit_apply : vehicle_id
+  visit_apply ||--o{ visitor_companion : apply_id
+  sys_user ||--o{ visit_apply : host_user_id
+  visit_apply ||--o{ approval_record : apply_id
+  sys_user ||--o{ approval_record : approver_user_id
+  visit_apply ||--o| pass_code : apply_id
+  visit_apply ||--o{ access_record : apply_id
+  visitor ||--o{ access_record : visitor_id
+  pass_code ||--o{ access_record : pass_code_id
+  campus_gate ||--o{ access_record : entry_exit_gate_id
+  sys_user ||--o{ access_record : guard_id
+  visitor ||--o{ blacklist : visitor_id
+  sys_user ||--o{ blacklist : operator_user_id
+  sys_user ||--o{ notice : receiver_user_id
+  sys_user ||--o{ operation_log : operator_user_id
+  dict_type ||--o{ dict_item : type_id
+  sys_user ||--o{ screenshot_record : created_by
+  sys_user ||--o{ report_record : generated_by
+
+  department {
+    bigint id PK
+    bigint parent_id FK
+    bigint leader_user_id FK
+  }
+  sys_user {
+    bigint id PK
+    bigint department_id FK
+  }
+  sys_role {
+    bigint id PK
+  }
+  sys_permission {
+    bigint id PK
+    bigint parent_id FK
+  }
+  sys_user_role {
+    bigint id PK
+    bigint user_id FK
+    bigint role_id FK
+  }
+  sys_role_permission {
+    bigint id PK
+    bigint role_id FK
+    bigint permission_id FK
+  }
+  visitor {
+    bigint id PK
+  }
+  visitor_vehicle {
+    bigint id PK
+    bigint visitor_id FK
+  }
+  visitor_companion {
+    bigint id PK
+    bigint apply_id FK
+  }
+  visit_apply {
+    bigint id PK
+    bigint visitor_id FK
+    bigint host_user_id FK
+    bigint department_id FK
+    bigint vehicle_id FK
+  }
+  approval_record {
+    bigint id PK
+    bigint apply_id FK
+    bigint approver_user_id FK
+  }
+  pass_code {
+    bigint id PK
+    bigint apply_id FK
+  }
+  access_record {
+    bigint id PK
+    bigint apply_id FK
+    bigint visitor_id FK
+    bigint pass_code_id FK
+    bigint entry_gate_id FK
+    bigint exit_gate_id FK
+  }
+  campus_gate {
+    bigint id PK
+  }
+  blacklist {
+    bigint id PK
+    bigint visitor_id FK
+    bigint operator_user_id FK
+  }
+  notice {
+    bigint id PK
+    bigint receiver_user_id FK
+    bigint business_id
+  }
+  operation_log {
+    bigint id PK
+    bigint operator_user_id FK
+  }
+  dict_type {
+    bigint id PK
+  }
+  dict_item {
+    bigint id PK
+    bigint type_id FK
+  }
+  screenshot_record {
+    bigint id PK
+    bigint created_by FK
+  }
+  report_record {
+    bigint id PK
+    bigint generated_by FK
+  }
+```
+
+## 6. 系统功能模块图
 
 对应文件：`diagrams/system_module.mmd`
+
+系统功能模块图采用层次结构，一级模块包括访客端、被访人端、审批管理、门岗管理、访客记录、安全管理、统计报表、系统管理和自动化支撑。
 
 ```mermaid
 flowchart TB
   SYS[重庆邮电大学智慧访客预约与出入校管理系统]
 
-  SYS --> M1[首页统计驾驶舱]
-  SYS --> M2[访客预约管理]
-  SYS --> M3[确认与审批管理]
-  SYS --> M4[通行凭证与门岗核验]
-  SYS --> M5[出入校登记管理]
-  SYS --> M6[安全风控管理]
-  SYS --> M7[查询统计报表]
-  SYS --> M8[系统基础管理]
-  SYS --> M9[自动截图与报告管理]
+  SYS --> V[访客端]
+  SYS --> H[被访人端]
+  SYS --> A[审批管理]
+  SYS --> G[门岗管理]
+  SYS --> R[访客记录]
+  SYS --> S[安全管理]
+  SYS --> T[统计报表]
+  SYS --> M[系统管理]
+  SYS --> X[自动化支撑]
 
-  M1 --> M101[今日访客概览]
-  M1 --> M102[当前在校与超时预警]
-  M1 --> M103[趋势图与排行图]
-  M1 --> M104[快捷入口]
+  subgraph VisitorSide[访客端]
+    V1[访客预约]
+    V2[状态查询]
+    V3[通行凭证]
+    V4[历史记录]
+  end
 
-  M2 --> M201[访客预约申请]
-  M2 --> M202[我的预约]
-  M2 --> M203[预约详情]
-  M2 --> M204[修改未审批预约]
-  M2 --> M205[取消未审批预约]
+  subgraph HostSide[被访人端]
+    H1[待确认预约]
+    H2[确认预约]
+    H3[拒绝预约]
+    H4[接待记录]
+  end
 
-  M3 --> M301[被访人待确认]
-  M3 --> M302[被访人确认或拒绝]
-  M3 --> M303[部门待审批]
-  M3 --> M304[部门审批通过或拒绝]
-  M3 --> M305[审批记录留痕]
+  subgraph ApprovalSide[审批管理]
+    A1[部门待审批]
+    A2[审批通过]
+    A3[审批拒绝]
+    A4[审批记录留痕]
+  end
 
-  M4 --> M401[通行码生成]
-  M4 --> M402[通行码查询]
-  M4 --> M403[预约编号核验]
-  M4 --> M404[手机号或证件号核验]
-  M4 --> M405[核验结果提示]
+  subgraph GateSide[门岗管理]
+    G1[通行码核验]
+    G2[入校登记]
+    G3[离校登记]
+    G4[当前在校访客]
+    G5[超时未离校]
+  end
 
-  M5 --> M501[入校登记]
-  M5 --> M502[离校登记]
-  M5 --> M503[当前在校访客]
-  M5 --> M504[超时未离校访客]
-  M5 --> M505[访问记录归档]
+  subgraph RecordSide[访客记录]
+    R1[预约记录查询]
+    R2[出入校记录]
+    R3[审批轨迹]
+    R4[车辆与随行人员]
+  end
 
-  M6 --> M601[黑名单管理]
-  M6 --> M602[黑名单自动检查]
-  M6 --> M603[异常通行处理]
-  M6 --> M604[系统操作日志]
+  subgraph SecuritySide[安全管理]
+    S1[黑名单管理]
+    S2[黑名单自动检查]
+    S3[异常通行处理]
+    S4[操作日志审计]
+  end
 
-  M7 --> M701[访客记录查询]
-  M7 --> M702[部门访客排行]
-  M7 --> M703[校门通行统计]
-  M7 --> M704[近七天访问趋势]
-  M7 --> M705[审批通过率]
+  subgraph ReportSide[统计报表]
+    T1[今日/本周/本月访客]
+    T2[近七天趋势]
+    T3[部门访客排行]
+    T4[校门通行统计]
+    T5[审批与风险分布]
+  end
 
-  M8 --> M801[用户管理]
-  M8 --> M802[角色权限管理]
-  M8 --> M803[部门管理]
-  M8 --> M804[校门管理]
-  M8 --> M805[字典管理]
+  subgraph ManageSide[系统管理]
+    M1[用户管理]
+    M2[角色权限管理]
+    M3[部门管理]
+    M4[校门管理]
+    M5[字典管理]
+  end
 
-  M9 --> M901[Playwright 自动截图]
-  M9 --> M902[截图清单 manifest]
-  M9 --> M903[Markdown 报告生成]
-  M9 --> M904[Word 报告导出]
+  subgraph AutomationSide[自动化支撑]
+    X1[自动截图]
+    X2[截图清单]
+    X3[自动报告生成]
+    X4[报告生成记录]
+  end
+
+  V --> V1
+  V --> V2
+  V --> V3
+  V --> V4
+  H --> H1
+  H --> H2
+  H --> H3
+  H --> H4
+  A --> A1
+  A --> A2
+  A --> A3
+  A --> A4
+  G --> G1
+  G --> G2
+  G --> G3
+  G --> G4
+  G --> G5
+  R --> R1
+  R --> R2
+  R --> R3
+  R --> R4
+  S --> S1
+  S --> S2
+  S --> S3
+  S --> S4
+  T --> T1
+  T --> T2
+  T --> T3
+  T --> T4
+  T --> T5
+  M --> M1
+  M --> M2
+  M --> M3
+  M --> M4
+  M --> M5
+  X --> X1
+  X --> X2
+  X --> X3
+  X --> X4
 ```
 
-该图从课程设计报告的系统功能角度描述重庆邮电大学智慧访客预约与出入校管理系统的功能边界。系统围绕访客预约、确认审批、通行核验、出入校登记、安全风控、统计报表和系统基础管理展开，并补充自动截图与报告管理模块，能够覆盖数据库课程设计要求中的主要业务模块。
+## 7. 访客预约审批流程图
 
-## 2. 用户用例图
+对应文件：`diagrams/visitor_workflow.mmd`
 
-对应文件：`diagrams/use_case.mmd`
+访客预约审批流程图展示从访客申请到黑名单检查、被访人确认、部门审批、通行码生成、门岗核验、入校、离校和归档的完整流程，并标出拒绝、过期、超时等异常分支。
 
 ```mermaid
 flowchart LR
-  Visitor[访客]
-  Host[被访人]
-  Approver[部门审批人员]
-  Guard[门岗安保人员]
-  Admin[系统管理员]
-  Manager[校级管理人员]
+  Start([访客提交预约]) --> Blacklist{黑名单检查}
+  Blacklist -->|命中风险| Block[黑名单拦截或风险标记]
+  Block --> EndReject([流程终止])
 
-  subgraph System[重庆邮电大学智慧访客预约与出入校管理系统]
-    UC01([登录系统])
-    UC02([提交预约申请])
-    UC03([查看我的预约])
-    UC04([修改或取消未审批预约])
-    UC05([查看通行凭证])
-    UC06([确认预约])
-    UC07([拒绝预约])
-    UC08([部门审批通过])
-    UC09([部门审批拒绝])
-    UC10([门岗核验])
-    UC11([入校登记])
-    UC12([离校登记])
-    UC13([查看当前在校访客])
-    UC14([处理超时未离校])
-    UC15([黑名单管理])
-    UC16([访客记录查询])
-    UC17([统计报表查看])
-    UC18([用户角色权限管理])
-    UC19([部门与校门管理])
-    UC20([系统日志查看])
-    UC21([截图与报告记录维护])
-  end
+  Blacklist -->|未命中| Host{被访人确认}
+  Host -->|拒绝| HostReject[被访人拒绝]
+  HostReject --> EndReject
+  Host -->|确认| Dept{部门审批}
+  Dept -->|拒绝或退回| DeptReject[审批拒绝/退回修改]
+  DeptReject --> EndReject
+  Dept -->|通过| Pass[生成通行码]
 
-  Visitor --> UC01
-  Visitor --> UC02
-  Visitor --> UC03
-  Visitor --> UC04
-  Visitor --> UC05
+  Pass --> Verify{门岗核验}
+  Verify -->|通行码过期| Expired[提示通行码过期]
+  Expired --> EndReject
+  Verify -->|状态异常| VerifyFail[禁止入校并记录日志]
+  VerifyFail --> EndReject
+  Verify -->|核验通过| Entry[入校登记]
 
-  Host --> UC01
-  Host --> UC06
-  Host --> UC07
-  Host --> UC16
-
-  Approver --> UC01
-  Approver --> UC08
-  Approver --> UC09
-  Approver --> UC16
-  Approver --> UC17
-
-  Guard --> UC01
-  Guard --> UC10
-  Guard --> UC11
-  Guard --> UC12
-  Guard --> UC13
-  Guard --> UC14
-
-  Admin --> UC01
-  Admin --> UC15
-  Admin --> UC18
-  Admin --> UC19
-  Admin --> UC20
-  Admin --> UC21
-  Admin --> UC17
-
-  Manager --> UC01
-  Manager --> UC13
-  Manager --> UC14
-  Manager --> UC16
-  Manager --> UC17
+  Entry --> InCampus[当前在校]
+  InCampus --> Timeout{是否超时未离校}
+  Timeout -->|是| Overtime[超时未离校预警]
+  Overtime --> Leave[离校登记]
+  Timeout -->|否| Leave
+  Leave --> Archive[访问记录归档]
+  Archive --> Report[查询统计与报表]
+  Report --> End([流程结束])
 ```
 
-该图描述访客、被访人、部门审批人员、门岗安保人员、系统管理员和校级管理人员六类角色与系统功能之间的使用关系。用例覆盖预约提交、审批处理、门岗核验、出入校登记、统计查询和系统维护，体现了系统的角色权限边界。
+## 8. 门岗核验入校流程图
 
-## 3. 数据流程图
+对应文件：`diagrams/gate_check_workflow.mmd`
 
-对应文件：`diagrams/data_flow.mmd`
+门岗核验流程图以安保人员操作为主线，展示通行码、预约状态、访问时间、黑名单和通行码有效性的逐项校验逻辑。
+
+```mermaid
+flowchart LR
+  Guard([门岗安保人员]) --> Input[输入通行码/预约号/手机号/证件号]
+  Input --> Query[查询预约与通行凭证]
+  Query --> Exists{是否存在预约}
+  Exists -->|否| NotFound[提示未查询到预约]
+  NotFound --> Deny([禁止入校])
+
+  Exists -->|是| Status{预约是否审批通过}
+  Status -->|否| NotApproved[提示未审批通过或已拒绝]
+  NotApproved --> Deny
+
+  Status -->|是| Time{是否在有效访问时间}
+  Time -->|否| TimeFail[提示未到访问时间或已过期]
+  TimeFail --> Deny
+
+  Time -->|是| Risk{黑名单检查}
+  Risk -->|命中| RiskWarn[风险提示并拦截/人工复核]
+  RiskWarn --> Deny
+
+  Risk -->|未命中| Pass{通行码是否有效}
+  Pass -->|无效/作废/已过期| PassFail[通行码不可用]
+  PassFail --> Deny
+  Pass -->|有效| Allow[允许入校]
+
+  Allow --> Entry[记录入校时间、校门、安保人员]
+  Entry --> Update[更新访问状态为已入校]
+  Update --> Log[写入操作日志]
+  Log --> Done([核验完成])
+```
+
+## 9. 顶层数据流程图
+
+对应文件：`diagrams/data_flow_level0.mmd`
+
+顶层数据流程图按照数据库课程设计要求展示外部实体、系统处理过程、数据存储和主要数据流。
 
 ```mermaid
 flowchart LR
@@ -165,436 +723,173 @@ flowchart LR
   Manager[外部实体：校级管理人员]
   Admin[外部实体：系统管理员]
 
-  subgraph P[处理过程]
-    P1[1. 预约申请受理]
+  P0((智慧访客预约与出入校管理系统))
+
+  D1[(访客与预约数据)]
+  D2[(审批与通行数据)]
+  D3[(出入校记录数据)]
+  D4[(用户权限与基础数据)]
+  D5[(日志、截图与报告数据)]
+
+  Visitor -->|预约申请、身份信息| P0
+  P0 -->|预约状态、通行凭证| Visitor
+  Host -->|确认意见| P0
+  P0 -->|待确认预约| Host
+  Approver -->|审批意见| P0
+  P0 -->|待审批预约| Approver
+  Guard -->|核验与登记信息| P0
+  P0 -->|核验结果、在校名单| Guard
+  Manager -->|统计查询条件| P0
+  P0 -->|统计报表| Manager
+  Admin -->|基础数据维护| P0
+  P0 -->|日志、截图、报告记录| Admin
+
+  P0 <--> D1
+  P0 <--> D2
+  P0 <--> D3
+  P0 <--> D4
+  P0 <--> D5
+```
+
+## 10. 二层数据流程图
+
+对应文件：`diagrams/data_flow_level1.mmd`
+
+二层数据流程图将预约审批和门岗核验两个核心数据流程展开，明确各处理过程读写的数据存储。
+
+```mermaid
+flowchart LR
+  Visitor[访客]
+  Host[被访人]
+  Approver[部门审批人员]
+  Guard[门岗安保人员]
+
+  subgraph ApplyApproval[预约审批数据流程]
+    P1[1. 受理预约申请]
     P2[2. 黑名单检查]
     P3[3. 被访人确认]
     P4[4. 部门审批]
-    P5[5. 通行凭证生成]
+    P5[5. 生成通行凭证]
+  end
+
+  subgraph GateAccess[门岗核验数据流程]
     P6[6. 门岗核验]
     P7[7. 入校登记]
     P8[8. 离校登记]
-    P9[9. 查询统计与报表]
-    P10[10. 系统基础维护]
+    P9[9. 超时处理]
   end
 
-  subgraph D[数据存储]
-    D1[(visitor 访客信息)]
-    D2[(visit_apply 预约申请)]
-    D3[(blacklist 黑名单)]
-    D4[(approval_record 审批记录)]
-    D5[(pass_code 通行凭证)]
-    D6[(access_record 出入校记录)]
-    D7[(sys_user/sys_role/sys_permission 用户权限)]
-    D8[(department/campus_gate 部门校门)]
-    D9[(operation_log 操作日志)]
-    D10[(screenshot_record/report_record 截图报告)]
-  end
+  D1[(visitor)]
+  D2[(visit_apply)]
+  D3[(blacklist)]
+  D4[(approval_record)]
+  D5[(pass_code)]
+  D6[(access_record)]
+  D7[(campus_gate)]
+  D8[(operation_log)]
 
-  Visitor -->|访客身份、来访事由、访问时间| P1
-  P1 -->|写入或更新访客资料| D1
-  P1 -->|生成预约申请| D2
+  Visitor -->|身份、车辆、随行人员、访问事由| P1
+  P1 -->|访客资料| D1
+  P1 -->|预约申请| D2
   P1 --> P2
-  P2 -->|读取黑名单规则| D3
-  P2 -->|风险状态或拦截结果| D2
-  P2 -->|待确认预约| P3
-  Host -->|确认或拒绝意见| P3
+  P2 -->|读取手机号/证件号风险| D3
+  P2 -->|风险状态| D2
+  P2 -->|待确认申请| P3
+  Host -->|确认/拒绝| P3
   P3 -->|确认记录| D4
-  P3 -->|更新预约状态| D2
-  P3 -->|待部门审批申请| P4
-  Approver -->|审批意见| P4
+  P3 -->|预约状态| D2
+  P3 -->|待审批申请| P4
+  Approver -->|审批通过/拒绝/退回| P4
   P4 -->|审批记录| D4
-  P4 -->|通过或拒绝状态| D2
+  P4 -->|审批状态| D2
   P4 -->|审批通过申请| P5
-  P5 -->|生成二维码和有效期| D5
-  Guard -->|预约编号、手机号、证件号或通行码| P6
+  P5 -->|通行码、有效期| D5
+
+  Guard -->|通行码/预约号/手机号/证件号| P6
   P6 -->|读取预约状态| D2
-  P6 -->|读取通行凭证| D5
+  P6 -->|读取通行码| D5
   P6 -->|读取黑名单| D3
-  P6 -->|核验通过| P7
-  P7 -->|入校时间、校门、安保人员| D6
+  P6 -->|读取校门信息| D7
+  P6 -->|核验结果| P7
+  P7 -->|入校记录| D6
   P7 -->|访问状态已入校| D2
+  P7 -->|操作日志| D8
   Guard -->|离校确认| P8
-  P8 -->|离校时间、校门、安保人员| D6
-  P8 -->|访问状态已离校或超时| D2
-  Manager -->|统计条件| P9
-  Admin -->|统计条件| P9
-  P9 -->|读取业务数据| D1
-  P9 -->|读取预约数据| D2
-  P9 -->|读取通行数据| D6
-  P9 -->|输出报表、趋势、排行| Manager
-  Admin -->|用户、角色、部门、校门、字典维护| P10
-  P10 --> D7
-  P10 --> D8
-  P10 --> D9
-  P9 --> D10
+  P8 -->|离校记录| D6
+  P8 -->|访问状态已离校| D2
+  P8 -->|操作日志| D8
+  P8 --> P9
+  P9 -->|超时标记| D6
+  P9 -->|超时状态| D2
 ```
 
-该图综合表示顶层数据流程和二层数据处理过程。访客预约数据先进入预约申请受理和黑名单检查，再经过被访人确认、部门审批、通行凭证生成、门岗核验、入校登记、离校登记和查询统计等处理过程，所有关键数据均落入对应数据库表。
-
-## 4. E-R 图
-
-对应文件：`diagrams/er_diagram.mmd`
-
-```mermaid
-erDiagram
-  DEPARTMENT ||--o{ SYS_USER : contains
-  DEPARTMENT ||--o{ VISIT_APPLY : receives
-  DEPARTMENT ||--o{ DEPARTMENT : parent_of
-
-  SYS_USER ||--o{ SYS_USER_ROLE : owns
-  SYS_ROLE ||--o{ SYS_USER_ROLE : assigned
-  SYS_ROLE ||--o{ SYS_ROLE_PERMISSION : owns
-  SYS_PERMISSION ||--o{ SYS_ROLE_PERMISSION : granted
-  SYS_PERMISSION ||--o{ SYS_PERMISSION : parent_of
-
-  VISITOR ||--o{ VISITOR_VEHICLE : owns
-  VISITOR ||--o{ VISIT_APPLY : submits
-  VISITOR ||--o{ BLACKLIST : may_be_listed
-  VISITOR ||--o{ ACCESS_RECORD : enters_or_exits
-
-  SYS_USER ||--o{ VISIT_APPLY : hosts
-  VISIT_APPLY ||--o{ VISITOR_COMPANION : includes
-  VISITOR_VEHICLE ||--o{ VISIT_APPLY : used_by
-  VISIT_APPLY ||--o{ APPROVAL_RECORD : has
-  SYS_USER ||--o{ APPROVAL_RECORD : approves
-  VISIT_APPLY ||--|| PASS_CODE : generates
-  PASS_CODE ||--o{ ACCESS_RECORD : verifies
-  VISIT_APPLY ||--o{ ACCESS_RECORD : produces
-  CAMPUS_GATE ||--o{ ACCESS_RECORD : records
-  SYS_USER ||--o{ ACCESS_RECORD : handles
-
-  SYS_USER ||--o{ NOTICE : receives
-  SYS_USER ||--o{ OPERATION_LOG : creates
-  DICT_TYPE ||--o{ DICT_ITEM : contains
-  SYS_USER ||--o{ SCREENSHOT_RECORD : creates
-  SYS_USER ||--o{ REPORT_RECORD : generates
-
-  DEPARTMENT {
-    bigint id PK
-    bigint parent_id FK
-    varchar dept_code UK
-    varchar dept_name
-    bigint leader_user_id FK
-  }
-
-  SYS_USER {
-    bigint id PK
-    varchar username UK
-    varchar password_hash
-    varchar real_name
-    bigint department_id FK
-    varchar user_type
-  }
-
-  SYS_ROLE {
-    bigint id PK
-    varchar role_code UK
-    varchar role_name
-  }
-
-  SYS_PERMISSION {
-    bigint id PK
-    varchar permission_code UK
-    varchar permission_name
-    varchar route_path
-    varchar api_path
-  }
-
-  VISITOR {
-    bigint id PK
-    varchar visitor_name
-    varchar id_number UK
-    varchar phone
-    varchar visitor_level
-  }
-
-  VISIT_APPLY {
-    bigint id PK
-    varchar apply_no UK
-    bigint visitor_id FK
-    bigint host_user_id FK
-    bigint department_id FK
-    bigint vehicle_id FK
-    varchar apply_status
-    varchar access_status
-  }
-
-  APPROVAL_RECORD {
-    bigint id PK
-    bigint apply_id FK
-    varchar approval_step
-    bigint approver_user_id FK
-    varchar approval_result
-    datetime approval_time
-  }
-
-  PASS_CODE {
-    bigint id PK
-    bigint apply_id FK
-    varchar pass_code UK
-    datetime valid_from
-    datetime valid_to
-    varchar pass_status
-  }
-
-  ACCESS_RECORD {
-    bigint id PK
-    bigint apply_id FK
-    bigint visitor_id FK
-    bigint pass_code_id FK
-    bigint entry_gate_id FK
-    bigint exit_gate_id FK
-    varchar access_status
-  }
-```
-
-该图从概念结构角度描述系统核心实体及联系，包括部门、系统用户、角色权限、访客、预约申请、审批记录、通行凭证、出入校记录、黑名单、通知、日志、截图记录和报告记录。实体关系能够自然转换为后续 MySQL 关系模式。
-
-## 5. 数据库表关系图
-
-对应文件：`diagrams/table_relation.mmd`
-
-```mermaid
-erDiagram
-  department ||--o{ sys_user : department_id
-  department ||--o{ department : parent_id
-  department ||--o{ visit_apply : department_id
-
-  sys_user ||--o{ sys_user_role : user_id
-  sys_role ||--o{ sys_user_role : role_id
-  sys_role ||--o{ sys_role_permission : role_id
-  sys_permission ||--o{ sys_role_permission : permission_id
-  sys_permission ||--o{ sys_permission : parent_id
-
-  visitor ||--o{ visitor_vehicle : visitor_id
-  visitor ||--o{ visit_apply : visitor_id
-  visitor_vehicle ||--o{ visit_apply : vehicle_id
-  sys_user ||--o{ visit_apply : host_user_id
-  visit_apply ||--o{ visitor_companion : apply_id
-  visit_apply ||--o{ approval_record : apply_id
-  sys_user ||--o{ approval_record : approver_user_id
-
-  visit_apply ||--|| pass_code : apply_id
-  pass_code ||--o{ access_record : pass_code_id
-  visit_apply ||--o{ access_record : apply_id
-  visitor ||--o{ access_record : visitor_id
-  campus_gate ||--o{ access_record : entry_gate_id
-  campus_gate ||--o{ access_record : exit_gate_id
-  sys_user ||--o{ access_record : entry_guard_id
-  sys_user ||--o{ access_record : exit_guard_id
-
-  visitor ||--o{ blacklist : visitor_id
-  sys_user ||--o{ blacklist : operator_user_id
-  sys_user ||--o{ notice : receiver_user_id
-  sys_user ||--o{ operation_log : operator_user_id
-  dict_type ||--o{ dict_item : type_id
-  sys_user ||--o{ screenshot_record : created_by
-  sys_user ||--o{ report_record : generated_by
-```
-
-该图从逻辑结构角度展示 MySQL 表之间的主外键依赖关系。图中表名与 schema.sql 保持一致，说明 visit_apply、approval_record、pass_code、access_record 等核心业务表如何连接访客、用户、部门和校门基础数据。
-
-## 6. 系统架构图
+## 11. 系统架构图
 
 对应文件：`diagrams/system_architecture.mmd`
 
+系统架构图展示 Vue 前端、Spring Boot 后端、MySQL 数据库、Playwright 自动截图、图文件目录、截图目录和报告输出目录之间的协作关系。
+
 ```mermaid
-flowchart TB
-  subgraph Client[前端访问层]
-    Browser[浏览器]
-    Vue[Vue 3 + Vite]
-    Element[Element Plus + ECharts]
+flowchart LR
+  subgraph Client[浏览器前端]
+    Browser[Vue 3 + Vite]
+    UI[Element Plus + ECharts]
   end
 
-  subgraph Frontend[前端工程层]
-    Router[Vue Router 路由控制]
-    Axios[Axios 请求拦截器]
-    Token[Token 本地存储]
-    Pages[业务页面组件]
-  end
-
-  subgraph Backend[后端服务层]
-    Controller[Spring Boot Controller]
-    Security[Spring Security + JWT]
-    Service[业务 Service]
-    Workflow[访客流程服务]
+  subgraph Backend[Spring Boot 后端]
+    API[REST API /api]
+    Auth[JWT 鉴权]
+    Service[业务服务层]
     Mapper[MyBatis Plus Mapper]
-    Swagger[Swagger 接口文档]
+    Swagger[Swagger / Knife4j]
   end
 
-  subgraph Data[数据持久层]
-    MySQL[(MySQL 8 数据库)]
-    Tables[21 张业务数据表]
+  subgraph Database[数据库]
+    MySQL[(MySQL 8\ncqupt_visitor_system)]
   end
 
-  subgraph Automation[自动化支撑层]
-    Playwright[Playwright 自动截图]
-    Manifest[screenshots/manifest.json]
-    ReportScript[generate_report.py]
-    Markdown[Markdown 课程设计报告]
-    Word[Word 文档导出]
+  subgraph Automation[自动化支撑]
+    Playwright[Playwright 截图脚本]
+    ReportScript[LaTeX / Markdown 报告生成脚本]
+    DiagramFiles[diagrams/*.mmd / *.dot]
+    ScreenshotDir[screenshots/*.png]
+    ReportDir[docs / reports 输出]
   end
 
-  Browser --> Vue
-  Vue --> Element
-  Vue --> Router
-  Router --> Pages
-  Pages --> Axios
-  Axios --> Token
-  Axios -->|/api| Controller
-  Controller --> Security
-  Security --> Service
-  Service --> Workflow
+  Browser -->|Axios + Token| API
+  UI --> Browser
+  API --> Auth
+  API --> Service
   Service --> Mapper
   Mapper --> MySQL
-  MySQL --> Tables
-  Controller --> Swagger
+  Swagger --> API
 
-  Playwright --> Browser
-  Playwright --> Manifest
-  Manifest --> ReportScript
-  MySQL --> ReportScript
-  ReportScript --> Markdown
-  ReportScript --> Word
+  Playwright -->|自动登录与访问页面| Browser
+  Playwright -->|保存截图与 manifest| ScreenshotDir
+  DiagramFiles -->|导出 PDF/SVG| ReportScript
+  ScreenshotDir --> ReportScript
+  MySQL -->|表结构、SQL、统计结果| ReportScript
+  ReportScript -->|生成课程设计报告| ReportDir
 ```
 
-该图描述系统技术架构。前端采用 Vue 3、Vite、Element Plus、Axios 和 ECharts，后端采用 Spring Boot 3、Spring Security、JWT、MyBatis Plus，数据库采用 MySQL 8，同时由 Playwright 和报告生成脚本支撑自动截图与课程设计报告生成。
+## DOT 与 PDF 导出命令
 
-## 7. 访客预约审批流程图
+如果本地已安装 Graphviz，可执行以下命令生成 LaTeX 可直接引用的 PDF 图：
 
-对应文件：`diagrams/visitor_workflow.mmd`
-
-```mermaid
-flowchart TD
-  Start([访客提交预约申请])
-  SaveVisitor[保存或更新访客信息]
-  CheckBlacklist{手机号或证件号是否命中黑名单}
-  RejectBlacklist[标记 REJECTED_BLACKLIST 并写入操作日志]
-  PendingHost[预约状态：PENDING_HOST 待被访人确认]
-  HostDecision{被访人处理}
-  HostReject[状态：HOST_REJECTED]
-  HostConfirm[状态：HOST_CONFIRMED]
-  DeptQueue[进入部门审批队列]
-  DeptDecision{部门审批}
-  DeptReject[状态：REJECTED]
-  Approved[状态：APPROVED]
-  GeneratePass[生成 pass_code 通行凭证]
-  NotifyVisitor[通知访客查看通行码]
-  Archive[审批记录和操作日志归档]
-  End([进入门岗核验环节])
-
-  Start --> SaveVisitor
-  SaveVisitor --> CheckBlacklist
-  CheckBlacklist -->|是| RejectBlacklist
-  RejectBlacklist --> Archive
-  CheckBlacklist -->|否| PendingHost
-  PendingHost --> HostDecision
-  HostDecision -->|拒绝| HostReject
-  HostDecision -->|确认| HostConfirm
-  HostConfirm --> DeptQueue
-  DeptQueue --> DeptDecision
-  DeptDecision -->|拒绝| DeptReject
-  DeptDecision -->|通过| Approved
-  Approved --> GeneratePass
-  GeneratePass --> NotifyVisitor
-  HostReject --> Archive
-  DeptReject --> Archive
-  NotifyVisitor --> Archive
-  Archive --> End
+```bash
+dot -Tpdf diagrams/er_core_business.dot -o diagrams/export/er_core_business.pdf
+dot -Tpdf diagrams/er_user_permission.dot -o diagrams/export/er_user_permission.pdf
+dot -Tpdf diagrams/er_system_support.dot -o diagrams/export/er_system_support.pdf
+dot -Tpdf diagrams/er_overview.dot -o diagrams/export/er_overview.pdf
+dot -Tpdf diagrams/table_relation.dot -o diagrams/export/table_relation.pdf
 ```
 
-该图描述从访客提交预约到审批通过生成通行凭证的完整流程。流程包含黑名单自动检查、被访人确认、部门审批、审批记录留痕和通行码生成，体现了预约状态从 PENDING_HOST 到 APPROVED、REJECTED 等状态的流转。
+如果使用 Mermaid CLI，可执行：
 
-## 8. 门岗核验入校流程图
-
-对应文件：`diagrams/gate_check_workflow.mmd`
-
-```mermaid
-flowchart TD
-  Start([门岗安保发起核验])
-  Input[输入通行码、预约编号、手机号或证件号]
-  QueryApply[查询 visit_apply、visitor、pass_code]
-  ApplyExists{是否存在预约}
-  StatusCheck{预约是否审批通过}
-  TimeCheck{当前时间是否在有效期内}
-  BlacklistCheck{访客是否在有效黑名单中}
-  AccessCheck{是否已离校或重复入校}
-  Deny[返回不允许入校及原因]
-  Allow[返回允许入校]
-  Entry[登记入校：写 access_record]
-  UpdateEntered[更新 access_status = ENTERED]
-  ExitRequest[访客离校登记]
-  ExitCheck{是否已入校且未离校}
-  Exit[登记离校时间和离校校门]
-  UpdateExited[更新 access_status = EXITED]
-  Overtime[定时或人工标记超时未离校]
-  End([访问记录归档])
-
-  Start --> Input
-  Input --> QueryApply
-  QueryApply --> ApplyExists
-  ApplyExists -->|否| Deny
-  ApplyExists -->|是| StatusCheck
-  StatusCheck -->|否| Deny
-  StatusCheck -->|是| TimeCheck
-  TimeCheck -->|否| Deny
-  TimeCheck -->|是| BlacklistCheck
-  BlacklistCheck -->|是| Deny
-  BlacklistCheck -->|否| AccessCheck
-  AccessCheck -->|异常| Deny
-  AccessCheck -->|正常| Allow
-  Allow --> Entry
-  Entry --> UpdateEntered
-  UpdateEntered --> ExitRequest
-  ExitRequest --> ExitCheck
-  ExitCheck -->|否| Deny
-  ExitCheck -->|是| Exit
-  Exit --> UpdateExited
-  UpdateExited --> End
-  UpdateEntered --> Overtime
-  Overtime --> End
+```bash
+mmdc -i diagrams/er_core_business.mmd -o diagrams/export/er_core_business.pdf
+mmdc -i diagrams/er_user_permission.mmd -o diagrams/export/er_user_permission.pdf
+mmdc -i diagrams/er_system_support.mmd -o diagrams/export/er_system_support.pdf
+mmdc -i diagrams/er_overview.mmd -o diagrams/export/er_overview.pdf
+mmdc -i diagrams/table_relation.mmd -o diagrams/export/table_relation.pdf
 ```
-
-该图描述门岗安保人员使用预约编号、手机号、证件号或通行码核验访客的过程。系统会检查预约是否存在、审批是否通过、访问时间是否有效、是否命中黑名单以及是否重复入离校，并据此完成入校、离校或超时处理。
-
-## 9. 自动截图和报告生成流程图
-
-对应文件：`diagrams/automation_report_workflow.mmd`
-
-```mermaid
-flowchart TD
-  Start([执行 scripts/run_all.sh])
-  InitDB[初始化 MySQL 数据库]
-  StartBackend[启动 Spring Boot 后端]
-  StartFrontend[启动 Vue 前端]
-  Login[Playwright 使用测试账号登录]
-  VisitPages[访问登录页、驾驶舱、预约、审批、核验、报表等核心页面]
-  Capture[保存截图到 screenshots/]
-  Manifest[生成 screenshots/manifest.json]
-  ReadDocs[读取 docs/report_parts 与 docs/diagrams.md]
-  ReadSQL[读取 database/schema.sql 与 query_examples.sql]
-  ReadScreenshots[读取截图清单和图片路径]
-  GenerateMD[生成 Markdown 课程设计报告]
-  ExportWord[使用 python-docx 或 Pandoc 导出 Word]
-  Record[写入 screenshot_record 与 report_record]
-  End([形成可提交材料])
-
-  Start --> InitDB
-  InitDB --> StartBackend
-  StartBackend --> StartFrontend
-  StartFrontend --> Login
-  Login --> VisitPages
-  VisitPages --> Capture
-  Capture --> Manifest
-  Manifest --> ReadScreenshots
-  ReadDocs --> GenerateMD
-  ReadSQL --> GenerateMD
-  ReadScreenshots --> GenerateMD
-  GenerateMD --> ExportWord
-  ExportWord --> Record
-  Record --> End
-```
-
-该图描述后续自动化交付流程。系统通过 run_all.sh 串联数据库初始化、后端启动、前端启动、Playwright 自动登录截图、manifest 生成、Markdown 报告生成和 Word 导出，为课程设计报告提供可重复生成的截图与文档材料。
-

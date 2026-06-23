@@ -1,0 +1,358 @@
+
+\section{需求分析}
+\subsection{综合需求}
+\subsubsection{02 需求分析}
+
+\paragraph{1. 业务背景}
+
+高校日常教学、科研、合作交流和后勤服务中存在大量校外访客入校需求。访客通常需要提前说明来访事由、被访人、访问时间、车辆和随行人员等信息，学校则需要完成身份核验、被访人确认、部门审批、门岗放行、出入校记录留存和后续统计分析。随着校园安全管理要求提高，传统人工登记方式难以满足流程规范化、数据可追溯和统计自动化的需要。
+
+\paragraph{2. 当前问题}
+
+预约与审批过程分散，访客、被访人、审批人员和门岗之间信息传递效率低。\\
+纸质登记或临时登记难以保证数据完整性，后续查询统计成本高。\\
+黑名单、超时未离校、重复入校等风险场景缺少自动检查。\\
+门岗核验依赖人工判断，缺少与预约和审批结果联动的数据依据。\\
+访客数据缺少统一归档，不利于按部门、校门、时间和状态进行统计分析。\\
+
+\paragraph{3. 系统目标}
+
+系统必须围绕“访客预约与出入校管理”建立统一的数据处理流程，实现预约申请、黑名单检查、被访人确认、部门审批、通行凭证生成、门岗核验、入校登记、离校登记、记录归档和查询统计。所有关键业务操作都应保存到数据库，并能在后续报告中通过表结构、关系模式和 SQL 查询体现。
+
+\paragraph{4. 用户角色分析}
+
+\begin{longtable}{p{0.31\textwidth}p{0.31\textwidth}p{0.31\textwidth}}
+\toprule
+角色 & 主要职责 & 数据访问范围 \\
+\midrule
+访客 & 提交预约申请、维护本人访客信息、查看预约状态和通行凭证 & 本人预约、本人通行凭证、本人出入校结果 \\
+被访人 & 查看与本人相关的预约申请，确认或拒绝访客来访 & 本人作为被访人的预约和审批记录 \\
+部门审批人员 & 审批本部门访客申请，填写审批意见 & 本部门预约、审批记录和统计数据 \\
+门岗安保人员 & 核验通行凭证，登记入校和离校，查看当前在校和超时未离校访客 & 门岗核验数据、出入校记录、通行凭证状态 \\
+系统管理员 & 管理用户、角色、权限、部门、校门、黑名单、字典、日志 & 系统全量管理数据 \\
+校级管理人员 & 查看全校访客记录和统计报表 & 全校访客记录和统计结果，通常只读 \\
+\bottomrule
+\end{longtable}
+
+
+\paragraph{5. 核心业务流程}
+
+访客提交预约申请 → 系统检查黑名单 → 被访人确认 → 部门审批 → 生成通行凭证 → 门岗核验 → 入校登记 → 离校登记 → 访问记录归档 → 查询统计。
+
+异常流程包括：黑名单访客被拦截、被访人拒绝、部门审批拒绝、通行凭证过期、重复入校登记、重复离校登记、已入校但超时未离校等。
+
+\paragraph{6. 功能需求}
+
+\begin{longtable}{p{0.16\textwidth}p{0.16\textwidth}p{0.16\textwidth}p{0.16\textwidth}p{0.16\textwidth}p{0.16\textwidth}}
+\toprule
+编号 & 功能需求 & 使用角色 & 输入 & 输出 & 对应数据 \\
+\midrule
+FR-01 & 访客提交预约申请 & 访客 & 访客信息、被访人、来访时间、事由、车辆、随行人员 & 预约申请记录 & visitor, visitor\_vehicle, visitor\_companion, visit\_apply \\
+FR-02 & 系统检查黑名单 & 系统 & 访客证件号、手机号 & 是否限制入校 & blacklist, visitor \\
+FR-03 & 被访人确认预约 & 被访人 & 预约编号、确认结果、意见 & 确认或拒绝结果 & visit\_apply, approval\_record, notice \\
+FR-04 & 部门审批预约 & 部门审批人员 & 预约编号、审批结果、审批意见 & 审批通过或拒绝 & approval\_record, visit\_apply \\
+FR-05 & 生成通行凭证 & 系统 & 审批通过的预约 & 通行码和有效期 & pass\_code \\
+FR-06 & 门岗核验通行凭证 & 门岗安保人员 & 通行码、访客身份信息 & 核验结果 & pass\_code, visit\_apply, blacklist \\
+FR-07 & 入校登记 & 门岗安保人员 & 预约编号、校门、入校时间 & 入校记录 & access\_record, campus\_gate \\
+FR-08 & 离校登记 & 门岗安保人员 & 出入校记录、离校时间 & 离校记录更新 & access\_record \\
+FR-09 & 当前在校访客查询 & 门岗安保人员、校级管理人员 & 时间、校门、部门 & 当前在校列表 & access\_record, visit\_apply \\
+FR-10 & 超时未离校查询 & 门岗安保人员、校级管理人员 & 当前时间、预约结束时间 & 超时未离校列表 & access\_record, visit\_apply \\
+FR-11 & 黑名单管理 & 系统管理员 & 访客、原因、期限、状态 & 黑名单记录 & blacklist \\
+FR-12 & 访客记录查询 & 系统管理员、校级管理人员 & 访客、部门、校门、时间、状态 & 查询结果 & visitor, visit\_apply, access\_record \\
+FR-13 & 统计报表 & 校级管理人员 & 时间范围、部门、校门 & 统计图表和指标 & visit\_apply, approval\_record, access\_record \\
+FR-14 & 用户角色权限管理 & 系统管理员 & 用户、角色、权限 & 权限配置结果 & sys\_user, sys\_role, sys\_permission \\
+FR-15 & 系统日志记录 & 系统 & 操作人、操作类型、结果 & 日志记录 & operation\_log \\
+FR-16 & 自动截图与报告素材记录 & 系统管理员 & 截图任务、报告任务 & 截图和报告记录 & screenshot\_record, report\_record \\
+\bottomrule
+\end{longtable}
+
+
+\paragraph{7. 性能需求}
+
+常规列表查询在测试数据规模下应在 2 秒内返回。\\
+门岗核验、入校登记和离校登记属于高频操作，应尽量减少人工输入。\\
+统计报表应支持按日期范围、部门和校门筛选，并能在课程演示数据规模下快速生成。\\
+关键查询字段如预约状态、访问时间、部门、校门、访客证件号应设计索引。\\
+
+\paragraph{8. 安全需求}
+
+系统必须提供登录认证，后续采用 JWT 进行接口访问控制。\\
+密码必须加密存储，不能以明文保存。\\
+不同角色只能访问授权菜单和接口。\\
+访客只能查看本人预约和通行凭证。\\
+部门审批人员只能审批本部门预约。\\
+门岗安保人员只能执行核验和出入校登记相关操作。\\
+关键操作必须写入系统日志，便于追溯。\\
+
+\paragraph{9. 运行需求}
+
+数据库运行环境为 MySQL 8。\\
+后端运行环境为 JDK 17 或兼容 Spring Boot 3 的环境。\\
+前端运行环境为 Node.js 与 Vite。\\
+系统应提供初始化数据库、启动后端、启动前端、自动截图和生成报告的脚本。\\
+README 必须说明运行步骤、测试账号和常见问题。\\
+
+\paragraph{10. 数据需求}
+
+系统需要维护以下数据：用户、角色、权限、部门、校门、访客、访客车辆、随行人员、预约申请、审批记录、通行凭证、出入校记录、黑名单、通知、操作日志、字典项、截图记录和报告记录。所有数据名称应在数据库表、后端实体、前端字段和报告中保持一致。
+
+\paragraph{11. 需求到数据库表的对应关系}
+
+\begin{longtable}{p{0.47\textwidth}p{0.47\textwidth}}
+\toprule
+需求主题 & 后续建议表 \\
+\midrule
+登录认证与角色权限 & sys\_user, sys\_role, sys\_permission, sys\_user\_role, sys\_role\_permission \\
+组织与校门管理 & department, campus\_gate \\
+访客基础信息 & visitor, visitor\_vehicle, visitor\_companion \\
+预约业务 & visit\_apply \\
+审批业务 & approval\_record \\
+通行凭证 & pass\_code \\
+出入校管理 & access\_record \\
+黑名单管理 & blacklist \\
+通知与日志 & notice, operation\_log \\
+字典配置 & dict\_type, dict\_item \\
+自动化材料 & screenshot\_record, report\_record \\
+\bottomrule
+\end{longtable}
+
+
+\subsection{数据流程图}
+本系统的数据流程图分为顶层数据流程图和二层数据流程图。源文件位于 \texttt{diagrams/data\_flow\_level0.mmd} 和 \texttt{diagrams/data\_flow\_level1.mmd}。当前 LaTeX 项目未直接嵌入 Mermaid 图，导出 PDF 后可替换为图片引用。
+\begin{lstlisting}[style=codestyle]
+mmdc -i diagrams/data_flow_level0.mmd -o report-latex/figures/data_flow_level0.pdf
+mmdc -i diagrams/data_flow_level1.mmd -o report-latex/figures/data_flow_level1.pdf
+\end{lstlisting}
+本节使用 Mermaid 描述“重庆邮电大学智慧访客预约与出入校管理系统”的主要数据流程。数据流程图中的外部实体、处理过程、数据流和数据存储均在数据字典中给出解释。
+
+\paragraph{1. 顶层数据流程图}
+
+\begin{lstlisting}[style=codestyle]
+flowchart LR
+  Visitor[访客] -->|预约申请信息| P0((智慧访客预约与出入校管理系统))
+  Host[被访人] -->|确认结果| P0
+  Approver[部门审批人员] -->|审批意见| P0
+  Guard[门岗安保人员] -->|核验与出入校登记| P0
+  Admin[系统管理员] -->|基础数据与权限配置| P0
+  Manager[校级管理人员] -->|统计查询条件| P0
+
+  P0 -->|预约状态与通行凭证| Visitor
+  P0 -->|待确认申请| Host
+  P0 -->|待审批申请| Approver
+  P0 -->|核验结果与当前在校列表| Guard
+  P0 -->|系统维护结果| Admin
+  P0 -->|统计报表| Manager
+
+  P0 <--> D1[(用户角色权限库)]
+  P0 <--> D2[(访客与预约库)]
+  P0 <--> D3[(审批与通行库)]
+  P0 <--> D4[(出入校记录库)]
+  P0 <--> D5[(黑名单与日志库)]
+\end{lstlisting}
+
+说明：顶层数据流程图展示系统与六类外部角色之间的数据交换，以及系统内部主要数据存储。
+
+\paragraph{2. 访客预约数据流程图}
+
+\begin{lstlisting}[style=codestyle]
+flowchart TD
+  V[访客] -->|填写访客身份、联系方式、被访人、访问时间、事由| P1((提交预约申请))
+  P1 -->|证件号/手机号| P2((黑名单检查))
+  P2 -->|查询黑名单| D1[(黑名单信息)]
+  P2 -->|未命中黑名单| P3((保存预约申请))
+  P2 -->|命中黑名单| R1[返回限制入校提示]
+  P3 -->|写入访客信息| D2[(访客信息)]
+  P3 -->|写入预约申请| D3[(预约申请信息)]
+  P3 -->|生成待确认通知| D4[(通知消息)]
+  P3 -->|预约提交结果| V
+\end{lstlisting}
+
+说明：预约数据流程以访客提交信息为起点，系统先检查黑名单，再保存访客和预约数据，并通知被访人确认。
+
+\paragraph{3. 审批数据流程图}
+
+\begin{lstlisting}[style=codestyle]
+flowchart TD
+  H[被访人] -->|确认或拒绝意见| P1((被访人确认))
+  P1 -->|读取待确认预约| D1[(预约申请信息)]
+  P1 -->|写入确认记录| D2[(审批记录)]
+  P1 -->|被访人拒绝| D1
+  P1 -->|被访人确认通过| P2((部门审批))
+  A[部门审批人员] -->|审批结果与审批意见| P2
+  P2 -->|读取部门与预约信息| D1
+  P2 -->|写入部门审批记录| D2
+  P2 -->|审批拒绝| D1
+  P2 -->|审批通过| P3((生成通行凭证))
+  P3 -->|写入通行码、有效期、状态| D3[(通行凭证)]
+  P3 -->|通知访客和被访人| D4[(通知消息)]
+\end{lstlisting}
+
+说明：审批流程分为被访人确认和部门审批两个环节，所有审批动作均写入审批记录，审批通过后才生成通行凭证。
+
+\paragraph{4. 门岗核验数据流程图}
+
+\begin{lstlisting}[style=codestyle]
+flowchart TD
+  G[门岗安保人员] -->|输入或扫描通行码| P1((通行凭证核验))
+  P1 -->|查询通行凭证| D1[(通行凭证)]
+  P1 -->|查询预约状态| D2[(预约申请信息)]
+  P1 -->|检查黑名单| D3[(黑名单信息)]
+  P1 -->|核验通过| P2((允许办理入校))
+  P1 -->|核验失败| R1[返回失败原因]
+  P2 -->|核验结果| G
+  P1 -->|记录核验操作| D4[(系统日志)]
+\end{lstlisting}
+
+说明：门岗核验必须同时检查通行凭证、预约状态和黑名单信息，核验失败时返回明确原因并记录操作日志。
+
+\paragraph{5. 出入校登记数据流程图}
+
+\begin{lstlisting}[style=codestyle]
+flowchart TD
+  G[门岗安保人员] -->|入校登记信息| P1((入校登记))
+  P1 -->|读取预约和通行凭证| D1[(预约申请信息)]
+  P1 -->|写入入校时间、校门、经办人| D2[(出入校记录)]
+  P1 -->|更新访问状态为已入校| D1
+  G -->|离校登记信息| P2((离校登记))
+  P2 -->|读取未离校记录| D2
+  P2 -->|写入离校时间和离校校门| D2
+  P2 -->|更新访问状态为已离校| D1
+  P3((超时未离校检查)) -->|读取当前在校记录| D2
+  P3 -->|读取预约结束时间| D1
+  P3 -->|输出超时列表| G
+  P1 --> D3[(系统日志)]
+  P2 --> D3
+\end{lstlisting}
+
+说明：出入校登记以 `access\_record` 为核心数据存储，入校和离校操作都需要防止重复登记，并为当前在校和超时未离校查询提供依据。
+
+\subsection{数据字典}
+\paragraph{1. 外部实体}
+
+\begin{longtable}{p{0.23\textwidth}p{0.23\textwidth}p{0.23\textwidth}p{0.23\textwidth}}
+\toprule
+外部实体 & 说明 & 输入数据 & 输出数据 \\
+\midrule
+访客 & 校外来访人员 & 访客信息、预约申请信息、车辆信息、随行人员信息 & 预约状态、通行凭证、核验结果 \\
+被访人 & 校内接待人员 & 确认结果、确认意见 & 待确认预约、确认结果通知 \\
+部门审批人员 & 部门审核人员 & 审批结果、审批意见 & 待审批预约、审批记录 \\
+门岗安保人员 & 校门核验和登记人员 & 通行码、入校登记、离校登记 & 核验结果、当前在校列表、超时未离校列表 \\
+系统管理员 & 系统维护人员 & 用户、角色、权限、部门、校门、黑名单、字典配置 & 维护结果、系统日志 \\
+校级管理人员 & 学校管理人员 & 查询条件、统计条件 & 访客记录、统计报表 \\
+\bottomrule
+\end{longtable}
+
+
+\paragraph{2. 数据流}
+
+\begin{longtable}{p{0.19\textwidth}p{0.19\textwidth}p{0.19\textwidth}p{0.19\textwidth}p{0.19\textwidth}}
+\toprule
+数据流名称 & 来源 & 去向 & 数据内容 & 频率 \\
+\midrule
+预约申请信息 & 访客 & 提交预约申请处理 & 访客、被访人、来访时间、事由、车辆、随行人员 & 按来访需求产生 \\
+黑名单检查请求 & 提交预约申请处理、通行凭证核验处理 & 黑名单信息 & 访客证件号、手机号、访客编号 & 预约和核验时产生 \\
+被访人确认信息 & 被访人 & 被访人确认处理 & 预约编号、确认结果、确认意见、确认时间 & 被访人处理预约时产生 \\
+部门审批信息 & 部门审批人员 & 部门审批处理 & 预约编号、审批结果、审批意见、审批时间 & 审批人员处理预约时产生 \\
+通行凭证信息 & 生成通行凭证处理 & 访客、门岗核验处理 & 通行码、有效期、预约编号、使用状态 & 审批通过后产生 \\
+门岗核验信息 & 门岗安保人员 & 通行凭证核验处理 & 通行码、访客身份、校门、核验时间 & 访客到校时产生 \\
+入校登记信息 & 门岗安保人员 & 入校登记处理 & 预约编号、入校时间、入校校门、经办人 & 访客入校时产生 \\
+离校登记信息 & 门岗安保人员 & 离校登记处理 & 出入校记录编号、离校时间、离校校门、经办人 & 访客离校时产生 \\
+查询统计条件 & 校级管理人员、系统管理员 & 查询统计处理 & 时间范围、部门、校门、状态、访客关键字 & 管理查询时产生 \\
+系统操作日志 & 各业务处理过程 & 系统日志 & 操作人、操作模块、操作类型、结果、时间 & 关键操作发生时产生 \\
+\bottomrule
+\end{longtable}
+
+
+\paragraph{3. 数据存储}
+
+\begin{longtable}{p{0.19\textwidth}p{0.19\textwidth}p{0.19\textwidth}p{0.19\textwidth}p{0.19\textwidth}}
+\toprule
+数据存储名称 & 对应建议表 & 主要数据 & 相关处理过程 & 保存期限 \\
+\midrule
+用户信息 & sys\_user & 用户账号、姓名、手机号、部门、状态、密码摘要 & 登录认证、权限控制、业务经办 & 长期保存 \\
+角色权限信息 & sys\_role, sys\_permission, sys\_user\_role, sys\_role\_permission & 角色、权限、用户角色关系、角色权限关系 & 登录授权、菜单控制、接口鉴权 & 长期保存 \\
+部门信息 & department & 部门编号、部门名称、负责人、状态 & 被访人归属、部门审批、统计报表 & 长期保存 \\
+校门信息 & campus\_gate & 校门编号、校门名称、位置、状态 & 门岗核验、入校登记、离校登记、校门统计 & 长期保存 \\
+访客信息 & visitor & 姓名、证件类型、证件号、手机号、单位 & 预约申请、黑名单检查、访客查询 & 长期或按规定保存 \\
+访客车辆信息 & visitor\_vehicle & 访客编号、车牌号、车辆类型 & 预约申请、门岗核验 & 随访客记录保存 \\
+随行人员信息 & visitor\_companion & 预约编号、姓名、证件号、联系方式 & 预约申请、门岗核验 & 随预约记录保存 \\
+预约申请信息 & visit\_apply & 访客、被访人、部门、时间、事由、状态 & 预约、确认、审批、统计 & 长期保存 \\
+审批记录 & approval\_record & 预约编号、审批环节、审批人、结果、意见、时间 & 被访人确认、部门审批 & 长期保存 \\
+通行凭证 & pass\_code & 预约编号、通行码、有效期、状态 & 通行码生成、门岗核验 & 随预约记录保存 \\
+出入校记录 & access\_record & 预约编号、入校时间、离校时间、校门、经办人、状态 & 入校登记、离校登记、当前在校、超时检查 & 长期保存 \\
+黑名单信息 & blacklist & 访客、原因、限制开始时间、限制结束时间、状态 & 黑名单检查、黑名单管理 & 按管理规定保存 \\
+通知消息 & notice & 接收人、标题、内容、状态、时间 & 预约通知、审批通知、系统通知 & 按需保存 \\
+系统日志 & operation\_log & 操作人、模块、类型、结果、IP、时间 & 审计追踪、问题排查 & 长期或按规定保存 \\
+字典信息 & dict\_type, dict\_item & 字典类型、字典项、显示顺序、状态 & 状态值、证件类型、车辆类型等基础配置 & 长期保存 \\
+截图记录 & screenshot\_record & 截图名称、路径、页面、角色、说明 & 自动截图、报告素材管理 & 项目期内保存 \\
+报告记录 & report\_record & 报告名称、路径、生成时间、状态 & 自动报告生成 & 项目期内保存 \\
+\bottomrule
+\end{longtable}
+
+
+\paragraph{4. 处理过程}
+
+\begin{longtable}{p{0.23\textwidth}p{0.23\textwidth}p{0.23\textwidth}p{0.23\textwidth}}
+\toprule
+处理过程 & 输入 & 输出 & 主要数据存储 \\
+\midrule
+提交预约申请 & 预约申请信息 & 预约记录、通知消息或黑名单提示 & visitor, visitor\_vehicle, visitor\_companion, visit\_apply, blacklist, notice \\
+黑名单检查 & 访客证件号、手机号 & 是否命中黑名单 & blacklist, visitor \\
+被访人确认 & 预约编号、确认结果、确认意见 & 审批记录、预约状态更新 & visit\_apply, approval\_record, notice \\
+部门审批 & 预约编号、审批结果、审批意见 & 审批记录、预约状态更新 & visit\_apply, approval\_record \\
+生成通行凭证 & 审批通过的预约 & 通行码、有效期 & pass\_code, visit\_apply \\
+通行凭证核验 & 通行码、访客身份 & 核验通过或失败原因 & pass\_code, visit\_apply, blacklist, operation\_log \\
+入校登记 & 预约编号、入校校门、经办人 & 入校记录和访问状态 & access\_record, visit\_apply, campus\_gate \\
+离校登记 & 出入校记录、离校校门、经办人 & 离校时间和访问状态 & access\_record, visit\_apply \\
+查询统计 & 查询条件 & 列表、指标、图表数据 & visit\_apply, approval\_record, access\_record, department, campus\_gate \\
+系统管理 & 基础数据维护请求 & 维护结果和日志 & sys\_user, sys\_role, sys\_permission, department, campus\_gate, dict\_type, dict\_item, operation\_log \\
+\bottomrule
+\end{longtable}
+
+
+\paragraph{5. 核心数据项}
+
+\begin{longtable}{p{0.13\textwidth}p{0.13\textwidth}p{0.13\textwidth}p{0.13\textwidth}p{0.13\textwidth}p{0.13\textwidth}p{0.13\textwidth}}
+\toprule
+数据项 & 含义 & 类型建议 & 长度 & 是否必填 & 约束 & 来源 \\
+\midrule
+visitor\_id & 访客编号 & BIGINT & 20 & 是 & 主键 & 系统生成 \\
+visitor\_name & 访客姓名 & VARCHAR & 50 & 是 & 非空 & 访客填写 \\
+id\_type & 证件类型 & VARCHAR & 30 & 是 & 字典项 & 访客填写 \\
+id\_number & 证件号码 & VARCHAR & 50 & 是 & 可唯一索引 & 访客填写 \\
+visitor\_phone & 访客手机号 & VARCHAR & 20 & 是 & 格式校验 & 访客填写 \\
+visitor\_unit & 访客单位 & VARCHAR & 100 & 否 & 无 & 访客填写 \\
+apply\_id & 预约编号 & BIGINT & 20 & 是 & 主键 & 系统生成 \\
+host\_user\_id & 被访人编号 & BIGINT & 20 & 是 & 外键 & 预约申请 \\
+department\_id & 部门编号 & BIGINT & 20 & 是 & 外键 & 被访人归属 \\
+visit\_reason & 来访事由 & VARCHAR & 255 & 是 & 非空 & 访客填写 \\
+plan\_start\_time & 计划开始时间 & DATETIME & - & 是 & 小于计划结束时间 & 访客填写 \\
+plan\_end\_time & 计划结束时间 & DATETIME & - & 是 & 大于计划开始时间 & 访客填写 \\
+apply\_status & 预约状态 & VARCHAR & 30 & 是 & 字典项 & 系统流转 \\
+approval\_id & 审批记录编号 & BIGINT & 20 & 是 & 主键 & 系统生成 \\
+approval\_step & 审批环节 & VARCHAR & 30 & 是 & 被访人确认/部门审批 & 审批过程 \\
+approval\_result & 审批结果 & VARCHAR & 30 & 是 & 通过/拒绝 & 审批人员填写 \\
+approval\_comment & 审批意见 & VARCHAR & 255 & 否 & 无 & 审批人员填写 \\
+pass\_code & 通行码 & VARCHAR & 64 & 是 & 唯一 & 系统生成 \\
+pass\_valid\_from & 通行开始时间 & DATETIME & - & 是 & 非空 & 系统生成 \\
+pass\_valid\_to & 通行结束时间 & DATETIME & - & 是 & 非空 & 系统生成 \\
+access\_id & 出入校记录编号 & BIGINT & 20 & 是 & 主键 & 系统生成 \\
+entry\_time & 入校时间 & DATETIME & - & 否 & 入校后填写 & 门岗登记 \\
+exit\_time & 离校时间 & DATETIME & - & 否 & 晚于入校时间 & 门岗登记 \\
+gate\_id & 校门编号 & BIGINT & 20 & 是 & 外键 & 门岗选择 \\
+access\_status & 访问状态 & VARCHAR & 30 & 是 & 未入校/已入校/已离校/超时未离校 & 系统流转 \\
+blacklist\_id & 黑名单编号 & BIGINT & 20 & 是 & 主键 & 系统生成 \\
+blacklist\_reason & 黑名单原因 & VARCHAR & 255 & 是 & 非空 & 管理员填写 \\
+username & 登录账号 & VARCHAR & 50 & 是 & 唯一 & 管理员维护 \\
+password\_hash & 密码摘要 & VARCHAR & 255 & 是 & 加密存储 & 系统生成 \\
+role\_code & 角色编码 & VARCHAR & 50 & 是 & 唯一 & 管理员维护 \\
+permission\_code & 权限编码 & VARCHAR & 100 & 是 & 唯一 & 管理员维护 \\
+operation\_type & 操作类型 & VARCHAR & 50 & 是 & 字典项 & 系统记录 \\
+operation\_time & 操作时间 & DATETIME & - & 是 & 非空 & 系统记录 \\
+\bottomrule
+\end{longtable}
+
+
+\paragraph{6. 数据字典与数据流程图对应说明}
+
+数据流程图中的“访客”“被访人”“部门审批人员”“门岗安保人员”“系统管理员”“校级管理人员”均在外部实体中定义；“提交预约申请”“黑名单检查”“被访人确认”“部门审批”“生成通行凭证”“通行凭证核验”“入校登记”“离校登记”“查询统计”等均在处理过程中定义；“访客信息”“预约申请信息”“审批记录”“通行凭证”“出入校记录”“黑名单信息”“用户角色权限库”“系统日志”等均在数据存储和核心数据项中说明。

@@ -1,36 +1,28 @@
-flowchart TD
-  Start([访客提交预约申请])
-  SaveVisitor[保存或更新访客信息]
-  CheckBlacklist{手机号或证件号是否命中黑名单}
-  RejectBlacklist[标记 REJECTED_BLACKLIST 并写入操作日志]
-  PendingHost[预约状态：PENDING_HOST 待被访人确认]
-  HostDecision{被访人处理}
-  HostReject[状态：HOST_REJECTED]
-  HostConfirm[状态：HOST_CONFIRMED]
-  DeptQueue[进入部门审批队列]
-  DeptDecision{部门审批}
-  DeptReject[状态：REJECTED]
-  Approved[状态：APPROVED]
-  GeneratePass[生成 pass_code 通行凭证]
-  NotifyVisitor[通知访客查看通行码]
-  Archive[审批记录和操作日志归档]
-  End([进入门岗核验环节])
+flowchart LR
+  Start([访客提交预约]) --> Blacklist{黑名单检查}
+  Blacklist -->|命中风险| Block[黑名单拦截或风险标记]
+  Block --> EndReject([流程终止])
 
-  Start --> SaveVisitor
-  SaveVisitor --> CheckBlacklist
-  CheckBlacklist -->|是| RejectBlacklist
-  RejectBlacklist --> Archive
-  CheckBlacklist -->|否| PendingHost
-  PendingHost --> HostDecision
-  HostDecision -->|拒绝| HostReject
-  HostDecision -->|确认| HostConfirm
-  HostConfirm --> DeptQueue
-  DeptQueue --> DeptDecision
-  DeptDecision -->|拒绝| DeptReject
-  DeptDecision -->|通过| Approved
-  Approved --> GeneratePass
-  GeneratePass --> NotifyVisitor
-  HostReject --> Archive
-  DeptReject --> Archive
-  NotifyVisitor --> Archive
-  Archive --> End
+  Blacklist -->|未命中| Host{被访人确认}
+  Host -->|拒绝| HostReject[被访人拒绝]
+  HostReject --> EndReject
+  Host -->|确认| Dept{部门审批}
+  Dept -->|拒绝或退回| DeptReject[审批拒绝/退回修改]
+  DeptReject --> EndReject
+  Dept -->|通过| Pass[生成通行码]
+
+  Pass --> Verify{门岗核验}
+  Verify -->|通行码过期| Expired[提示通行码过期]
+  Expired --> EndReject
+  Verify -->|状态异常| VerifyFail[禁止入校并记录日志]
+  VerifyFail --> EndReject
+  Verify -->|核验通过| Entry[入校登记]
+
+  Entry --> InCampus[当前在校]
+  InCampus --> Timeout{是否超时未离校}
+  Timeout -->|是| Overtime[超时未离校预警]
+  Overtime --> Leave[离校登记]
+  Timeout -->|否| Leave
+  Leave --> Archive[访问记录归档]
+  Archive --> Report[查询统计与报表]
+  Report --> End([流程结束])

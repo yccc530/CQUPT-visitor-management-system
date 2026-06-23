@@ -1,0 +1,25 @@
+digraph ERSystemSupport {
+  graph [rankdir=LR, splines=ortho, nodesep=0.55, ranksep=0.95, fontname="Microsoft YaHei", labelloc=t, label="系统支撑 E-R 图"];
+  node [shape=record, style="rounded,filled", fillcolor="#F8FBFF", color="#2B6CB0", fontname="Microsoft YaHei", fontsize=10];
+  edge [color="#4A5568", arrowsize=0.7, fontname="Microsoft YaHei", fontsize=9];
+
+  subgraph cluster_message_audit {
+    label="消息与审计"; color="#BBD7FF"; style="rounded";
+    notice [label="{notice|id PK\lreceiver_user_id FK\ltitle\lbusiness_type\lread_status\l}"];
+    operation_log [label="{operation_log|id PK\loperator_user_id FK\lmodule_name\loperation_type\loperation_result\loperation_time\l}"];
+  }
+
+  subgraph cluster_dict {
+    label="字典配置"; color="#BDECCB"; style="rounded";
+    dict_type [label="{dict_type|id PK\ltype_code\ltype_name\lstatus\l}"];
+    dict_item [label="{dict_item|id PK\ltype_id FK\litem_code\litem_name\litem_value\lstatus\l}"];
+  }
+
+  subgraph cluster_auto {
+    label="自动化交付"; color="#FFE4B5"; style="rounded";
+    screenshot_record [label="{screenshot_record|id PK\lscreenshot_code\lpage_name\lroute_path\lfile_path\lstatus\l}"];
+    report_record [label="{report_record|id PK\lreport_code\lreport_name\lmarkdown_path\lword_path\lgenerate_status\l}"];
+  }
+
+  dict_type -> dict_item [label="1:N contains"];
+}

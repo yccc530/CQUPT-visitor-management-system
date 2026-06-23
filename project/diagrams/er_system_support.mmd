@@ -1,0 +1,58 @@
+erDiagram
+  dict_type ||--o{ dict_item : contains
+
+  notice {
+    bigint id PK
+    bigint receiver_user_id FK
+    string receiver_type
+    string title
+    string business_type
+    bigint business_id
+    string read_status
+  }
+
+  operation_log {
+    bigint id PK
+    bigint operator_user_id FK
+    string operator_name
+    string module_name
+    string operation_type
+    string operation_result
+    datetime operation_time
+  }
+
+  dict_type {
+    bigint id PK
+    string type_code UK
+    string type_name
+    string status
+    string remark
+  }
+
+  dict_item {
+    bigint id PK
+    bigint type_id FK
+    string item_code
+    string item_name
+    string item_value
+    string status
+  }
+
+  screenshot_record {
+    bigint id PK
+    string screenshot_code UK
+    string page_name
+    string route_path
+    string role_code
+    string file_path
+    string status
+  }
+
+  report_record {
+    bigint id PK
+    string report_code UK
+    string report_name
+    string markdown_path
+    string word_path
+    string generate_status
+  }

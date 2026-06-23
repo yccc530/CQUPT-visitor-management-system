@@ -1,0 +1,58 @@
+erDiagram
+  department ||--o{ sys_user : contains
+  sys_user ||--o{ sys_user_role : assigned
+  sys_role ||--o{ sys_user_role : maps
+  sys_role ||--o{ sys_role_permission : grants
+  sys_permission ||--o{ sys_role_permission : maps
+
+  department {
+    bigint id PK
+    bigint parent_id FK
+    string dept_code UK
+    string dept_name
+    bigint leader_user_id FK
+    string phone
+    string status
+  }
+
+  sys_user {
+    bigint id PK
+    string username UK
+    string real_name
+    string phone UK
+    bigint department_id FK
+    string user_type
+    string status
+  }
+
+  sys_role {
+    bigint id PK
+    string role_code UK
+    string role_name
+    string role_desc
+    string status
+  }
+
+  sys_permission {
+    bigint id PK
+    string permission_code UK
+    string permission_name
+    string permission_type
+    string route_path
+    string api_path
+    string status
+  }
+
+  sys_user_role {
+    bigint id PK
+    bigint user_id FK
+    bigint role_id FK
+    datetime create_time
+  }
+
+  sys_role_permission {
+    bigint id PK
+    bigint role_id FK
+    bigint permission_id FK
+    datetime create_time
+  }

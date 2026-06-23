@@ -1,71 +1,20 @@
 flowchart LR
-  Visitor[外部实体：访客]
-  Host[外部实体：被访人]
-  Approver[外部实体：部门审批人员]
-  Guard[外部实体：门岗安保人员]
-  Manager[外部实体：校级管理人员]
-  Admin[外部实体：系统管理员]
+  Visitor[访客] --> P0((智慧访客预约与出入校管理系统))
+  Host[被访人] --> P0
+  Approver[部门审批人员] --> P0
+  Guard[门岗安保人员] --> P0
+  Manager[校级管理人员] --> P0
+  Admin[系统管理员] --> P0
 
-  subgraph P[处理过程]
-    P1[1. 预约申请受理]
-    P2[2. 黑名单检查]
-    P3[3. 被访人确认]
-    P4[4. 部门审批]
-    P5[5. 通行凭证生成]
-    P6[6. 门岗核验]
-    P7[7. 入校登记]
-    P8[8. 离校登记]
-    P9[9. 查询统计与报表]
-    P10[10. 系统基础维护]
-  end
+  P0 --> Visitor
+  P0 --> Host
+  P0 --> Approver
+  P0 --> Guard
+  P0 --> Manager
+  P0 --> Admin
 
-  subgraph D[数据存储]
-    D1[(visitor 访客信息)]
-    D2[(visit_apply 预约申请)]
-    D3[(blacklist 黑名单)]
-    D4[(approval_record 审批记录)]
-    D5[(pass_code 通行凭证)]
-    D6[(access_record 出入校记录)]
-    D7[(sys_user/sys_role/sys_permission 用户权限)]
-    D8[(department/campus_gate 部门校门)]
-    D9[(operation_log 操作日志)]
-    D10[(screenshot_record/report_record 截图报告)]
-  end
-
-  Visitor -->|访客身份、来访事由、访问时间| P1
-  P1 -->|写入或更新访客资料| D1
-  P1 -->|生成预约申请| D2
-  P1 --> P2
-  P2 -->|读取黑名单规则| D3
-  P2 -->|风险状态或拦截结果| D2
-  P2 -->|待确认预约| P3
-  Host -->|确认或拒绝意见| P3
-  P3 -->|确认记录| D4
-  P3 -->|更新预约状态| D2
-  P3 -->|待部门审批申请| P4
-  Approver -->|审批意见| P4
-  P4 -->|审批记录| D4
-  P4 -->|通过或拒绝状态| D2
-  P4 -->|审批通过申请| P5
-  P5 -->|生成二维码和有效期| D5
-  Guard -->|预约编号、手机号、证件号或通行码| P6
-  P6 -->|读取预约状态| D2
-  P6 -->|读取通行凭证| D5
-  P6 -->|读取黑名单| D3
-  P6 -->|核验通过| P7
-  P7 -->|入校时间、校门、安保人员| D6
-  P7 -->|访问状态已入校| D2
-  Guard -->|离校确认| P8
-  P8 -->|离校时间、校门、安保人员| D6
-  P8 -->|访问状态已离校或超时| D2
-  Manager -->|统计条件| P9
-  Admin -->|统计条件| P9
-  P9 -->|读取业务数据| D1
-  P9 -->|读取预约数据| D2
-  P9 -->|读取通行数据| D6
-  P9 -->|输出报表、趋势、排行| Manager
-  Admin -->|用户、角色、部门、校门、字典维护| P10
-  P10 --> D7
-  P10 --> D8
-  P10 --> D9
-  P9 --> D10
+  P0 <--> D1[(visitor / visit_apply)]
+  P0 <--> D2[(approval_record / pass_code)]
+  P0 <--> D3[(access_record / campus_gate)]
+  P0 <--> D4[(blacklist / operation_log)]
+  P0 <--> D5[(sys_user / role / permission)]

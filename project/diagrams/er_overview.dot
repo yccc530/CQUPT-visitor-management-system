@@ -1,0 +1,25 @@
+digraph EROverview {
+  graph [rankdir=LR, splines=ortho, nodesep=0.5, ranksep=0.9, fontname="Microsoft YaHei", labelloc=t, label="总体简化 E-R 图"];
+  node [shape=record, style="rounded,filled", fillcolor="#F8FBFF", color="#2B6CB0", fontname="Microsoft YaHei", fontsize=10];
+  edge [color="#4A5568", arrowsize=0.7, fontname="Microsoft YaHei", fontsize=9];
+
+  subgraph cluster_visitor { label="访客域"; color="#BBD7FF"; style="rounded"; visitor [label="{visitor|id PK\lname\lphone\l}"]; blacklist [label="{blacklist|id PK\lvisitor_id FK\llevel\lstatus\l}"]; }
+  subgraph cluster_apply { label="预约审批域"; color="#BDECCB"; style="rounded"; visit_apply [label="{visit_apply|id PK\lapply_no\lapply_status\laccess_status\l}"]; approval_record [label="{approval_record|id PK\lapply_id FK\lresult\l}"]; }
+  subgraph cluster_access { label="通行核验域"; color="#FFE4B5"; style="rounded"; pass_code [label="{pass_code|id PK\lpass_code\lstatus\l}"]; access_record [label="{access_record|id PK\laccess_status\l}"]; campus_gate [label="{campus_gate|id PK\lgate_name\l}"]; }
+  subgraph cluster_permission { label="权限域"; color="#E9D8FD"; style="rounded"; department [label="{department|id PK\ldept_name\l}"]; sys_user [label="{sys_user|id PK\lusername\luser_type\l}"]; sys_role [label="{sys_role|id PK\lrole_code\l}"]; sys_permission [label="{sys_permission|id PK\lpermission_code\l}"]; }
+  subgraph cluster_support { label="系统支撑域"; color="#FED7D7"; style="rounded"; notice [label="{notice|id PK\ltitle\l}"]; operation_log [label="{operation_log|id PK\lmodule_name\l}"]; }
+
+  visitor -> visit_apply [label="submits"];
+  department -> sys_user [label="contains"];
+  sys_user -> visit_apply [label="hosts"];
+  department -> visit_apply [label="approves"];
+  visit_apply -> approval_record [label="records"];
+  visit_apply -> pass_code [label="issues"];
+  pass_code -> access_record [label="verifies"];
+  campus_gate -> access_record [label="handles"];
+  visitor -> blacklist [label="risk"];
+  sys_user -> sys_role [label="roles", style=dashed];
+  sys_role -> sys_permission [label="permissions", style=dashed];
+  sys_user -> notice [label="receives"];
+  sys_user -> operation_log [label="writes"];
+}

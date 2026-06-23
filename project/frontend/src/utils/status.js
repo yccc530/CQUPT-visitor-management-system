@@ -1,4 +1,4 @@
-export const applyStatusMap = {
+﻿export const applyStatusMap = {
   PENDING_HOST: { text: '待确认', type: 'warning', class: 'status-pending' },
   HOST_CONFIRMED: { text: '被访人已确认', type: 'info', class: 'status-info' },
   PENDING_DEPT: { text: '待部门审批', type: 'warning', class: 'status-pending' },
@@ -20,6 +20,7 @@ export const accessStatusMap = {
 export const approvalResultMap = {
   APPROVED: { text: '同意', type: 'success', class: 'status-approved' },
   REJECTED: { text: '拒绝', type: 'danger', class: 'status-danger' },
+  RETURNED: { text: '退回修改', type: 'warning', class: 'status-pending' },
   PENDING: { text: '待处理', type: 'warning', class: 'status-pending' }
 }
 

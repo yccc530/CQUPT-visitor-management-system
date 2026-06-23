@@ -1,0 +1,25 @@
+digraph ERUserPermission {
+  graph [rankdir=LR, splines=ortho, nodesep=0.6, ranksep=1.0, fontname="Microsoft YaHei", labelloc=t, label="用户权限 E-R 图"];
+  node [shape=record, style="rounded,filled", fillcolor="#F8FBFF", color="#2B6CB0", fontname="Microsoft YaHei", fontsize=10];
+  edge [color="#4A5568", arrowsize=0.7, fontname="Microsoft YaHei", fontsize=9];
+
+  subgraph cluster_org {
+    label="组织用户域"; color="#BBD7FF"; style="rounded";
+    department [label="{department|id PK\ldept_code\ldept_name\lleader_user_id\lstatus\l}"];
+    sys_user [label="{sys_user|id PK\lusername\lreal_name\ldepartment_id FK\luser_type\lstatus\l}"];
+  }
+
+  subgraph cluster_rbac {
+    label="权限域"; color="#BDECCB"; style="rounded";
+    sys_user_role [label="{sys_user_role|id PK\luser_id FK\lrole_id FK\l}"];
+    sys_role [label="{sys_role|id PK\lrole_code\lrole_name\lstatus\l}"];
+    sys_role_permission [label="{sys_role_permission|id PK\lrole_id FK\lpermission_id FK\l}"];
+    sys_permission [label="{sys_permission|id PK\lpermission_code\lpermission_name\lpermission_type\lroute_path\lapi_path\l}"];
+  }
+
+  department -> sys_user [label="1:N contains"];
+  sys_user -> sys_user_role [label="1:N"];
+  sys_role -> sys_user_role [label="1:N"];
+  sys_role -> sys_role_permission [label="1:N"];
+  sys_permission -> sys_role_permission [label="1:N"];
+}

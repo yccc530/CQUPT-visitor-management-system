@@ -1,43 +1,28 @@
-flowchart TD
-  Start([门岗安保发起核验])
-  Input[输入通行码、预约编号、手机号或证件号]
-  QueryApply[查询 visit_apply、visitor、pass_code]
-  ApplyExists{是否存在预约}
-  StatusCheck{预约是否审批通过}
-  TimeCheck{当前时间是否在有效期内}
-  BlacklistCheck{访客是否在有效黑名单中}
-  AccessCheck{是否已离校或重复入校}
-  Deny[返回不允许入校及原因]
-  Allow[返回允许入校]
-  Entry[登记入校：写 access_record]
-  UpdateEntered[更新 access_status = ENTERED]
-  ExitRequest[访客离校登记]
-  ExitCheck{是否已入校且未离校}
-  Exit[登记离校时间和离校校门]
-  UpdateExited[更新 access_status = EXITED]
-  Overtime[定时或人工标记超时未离校]
-  End([访问记录归档])
+flowchart LR
+  Guard([门岗安保人员]) --> Input[输入通行码/预约号/手机号/证件号]
+  Input --> Query[查询预约与通行凭证]
+  Query --> Exists{是否存在预约}
+  Exists -->|否| NotFound[提示未查询到预约]
+  NotFound --> Deny([禁止入校])
 
-  Start --> Input
-  Input --> QueryApply
-  QueryApply --> ApplyExists
-  ApplyExists -->|否| Deny
-  ApplyExists -->|是| StatusCheck
-  StatusCheck -->|否| Deny
-  StatusCheck -->|是| TimeCheck
-  TimeCheck -->|否| Deny
-  TimeCheck -->|是| BlacklistCheck
-  BlacklistCheck -->|是| Deny
-  BlacklistCheck -->|否| AccessCheck
-  AccessCheck -->|异常| Deny
-  AccessCheck -->|正常| Allow
-  Allow --> Entry
-  Entry --> UpdateEntered
-  UpdateEntered --> ExitRequest
-  ExitRequest --> ExitCheck
-  ExitCheck -->|否| Deny
-  ExitCheck -->|是| Exit
-  Exit --> UpdateExited
-  UpdateExited --> End
-  UpdateEntered --> Overtime
-  Overtime --> End
+  Exists -->|是| Status{预约是否审批通过}
+  Status -->|否| NotApproved[提示未审批通过或已拒绝]
+  NotApproved --> Deny
+
+  Status -->|是| Time{是否在有效访问时间}
+  Time -->|否| TimeFail[提示未到访问时间或已过期]
+  TimeFail --> Deny
+
+  Time -->|是| Risk{黑名单检查}
+  Risk -->|命中| RiskWarn[风险提示并拦截/人工复核]
+  RiskWarn --> Deny
+
+  Risk -->|未命中| Pass{通行码是否有效}
+  Pass -->|无效/作废/已过期| PassFail[通行码不可用]
+  PassFail --> Deny
+  Pass -->|有效| Allow[允许入校]
+
+  Allow --> Entry[记录入校时间、校门、安保人员]
+  Entry --> Update[更新访问状态为已入校]
+  Update --> Log[写入操作日志]
+  Log --> Done([核验完成])

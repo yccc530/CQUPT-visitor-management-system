@@ -1,0 +1,61 @@
+
+\usepackage[a4paper, left=2.6cm, right=2.4cm, top=2.6cm, bottom=2.6cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.35em}
+\linespread{1.28}
+\pagestyle{fancy}
+\setlength{\headheight}{15pt}
+\fancyhf{}
+\fancyhead[L]{重庆邮电大学智慧访客预约与出入校管理系统}
+\fancyhead[R]{数据库原理课程设计}
+\fancyfoot[C]{\thepage}
+\ctexset{
+  section={format=\Large\bfseries, name={,、}, number=\chinese{section}},
+  subsection={format=\large\bfseries},
+  subsubsection={format=\normalsize\bfseries}
+}
+\lstdefinestyle{sqlstyle}{
+  language=SQL,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+\lstdefinestyle{codestyle}{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+\captionsetup{font=small, labelfont=bf}
+\setlist{nosep}

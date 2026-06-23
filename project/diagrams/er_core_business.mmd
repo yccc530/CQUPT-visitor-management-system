@@ -1,0 +1,100 @@
+erDiagram
+  visitor ||--o{ visit_apply : submits
+  visitor ||--o{ visitor_vehicle : owns
+  visitor_vehicle ||--o{ visit_apply : selected_by
+  visit_apply ||--o{ visitor_companion : includes
+  visit_apply ||--o{ approval_record : records
+  visit_apply ||--o| pass_code : issues
+  pass_code ||--o{ access_record : verifies
+  visit_apply ||--o{ access_record : archives
+  campus_gate ||--o{ access_record : handles
+  visitor ||--o{ blacklist : risks
+
+  visitor {
+    bigint id PK
+    string visitor_name
+    string id_number UK
+    string phone UK
+    string company
+    string visitor_level
+    string status
+  }
+
+  visitor_vehicle {
+    bigint id PK
+    bigint visitor_id FK
+    string plate_no UK
+    string vehicle_type
+    string color
+    string brand
+    string status
+  }
+
+  visitor_companion {
+    bigint id PK
+    bigint apply_id FK
+    string companion_name
+    string id_number
+    string phone
+    string relation_remark
+  }
+
+  visit_apply {
+    bigint id PK
+    string apply_no UK
+    bigint visitor_id FK
+    bigint host_user_id FK
+    bigint department_id FK
+    string visit_reason
+    string apply_status
+    string access_status
+  }
+
+  approval_record {
+    bigint id PK
+    bigint apply_id FK
+    string approval_step
+    bigint approver_user_id FK
+    string approval_result
+    datetime approval_time
+  }
+
+  pass_code {
+    bigint id PK
+    bigint apply_id FK
+    string pass_code UK
+    datetime valid_from
+    datetime valid_to
+    string pass_status
+    int verify_count
+  }
+
+  access_record {
+    bigint id PK
+    bigint apply_id FK
+    bigint visitor_id FK
+    bigint pass_code_id FK
+    bigint entry_gate_id FK
+    bigint exit_gate_id FK
+    string access_status
+    int overtime_flag
+  }
+
+  campus_gate {
+    bigint id PK
+    string gate_code UK
+    string gate_name
+    string gate_location
+    string gate_type
+    string status
+  }
+
+  blacklist {
+    bigint id PK
+    bigint visitor_id FK
+    string id_number
+    string phone
+    string reason
+    string level
+    string status
+  }

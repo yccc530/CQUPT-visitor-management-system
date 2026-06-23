@@ -1,31 +1,23 @@
 erDiagram
   department ||--o{ sys_user : department_id
-  department ||--o{ department : parent_id
   department ||--o{ visit_apply : department_id
-
   sys_user ||--o{ sys_user_role : user_id
   sys_role ||--o{ sys_user_role : role_id
   sys_role ||--o{ sys_role_permission : role_id
   sys_permission ||--o{ sys_role_permission : permission_id
-  sys_permission ||--o{ sys_permission : parent_id
-
   visitor ||--o{ visitor_vehicle : visitor_id
   visitor ||--o{ visit_apply : visitor_id
   visitor_vehicle ||--o{ visit_apply : vehicle_id
-  sys_user ||--o{ visit_apply : host_user_id
   visit_apply ||--o{ visitor_companion : apply_id
+  sys_user ||--o{ visit_apply : host_user_id
   visit_apply ||--o{ approval_record : apply_id
   sys_user ||--o{ approval_record : approver_user_id
-
-  visit_apply ||--|| pass_code : apply_id
-  pass_code ||--o{ access_record : pass_code_id
+  visit_apply ||--o| pass_code : apply_id
   visit_apply ||--o{ access_record : apply_id
   visitor ||--o{ access_record : visitor_id
-  campus_gate ||--o{ access_record : entry_gate_id
-  campus_gate ||--o{ access_record : exit_gate_id
-  sys_user ||--o{ access_record : entry_guard_id
-  sys_user ||--o{ access_record : exit_guard_id
-
+  pass_code ||--o{ access_record : pass_code_id
+  campus_gate ||--o{ access_record : entry_exit_gate_id
+  sys_user ||--o{ access_record : guard_id
   visitor ||--o{ blacklist : visitor_id
   sys_user ||--o{ blacklist : operator_user_id
   sys_user ||--o{ notice : receiver_user_id
@@ -33,3 +25,97 @@ erDiagram
   dict_type ||--o{ dict_item : type_id
   sys_user ||--o{ screenshot_record : created_by
   sys_user ||--o{ report_record : generated_by
+
+  department {
+    bigint id PK
+    bigint parent_id FK
+    bigint leader_user_id FK
+  }
+  sys_user {
+    bigint id PK
+    bigint department_id FK
+  }
+  sys_role {
+    bigint id PK
+  }
+  sys_permission {
+    bigint id PK
+    bigint parent_id FK
+  }
+  sys_user_role {
+    bigint id PK
+    bigint user_id FK
+    bigint role_id FK
+  }
+  sys_role_permission {
+    bigint id PK
+    bigint role_id FK
+    bigint permission_id FK
+  }
+  visitor {
+    bigint id PK
+  }
+  visitor_vehicle {
+    bigint id PK
+    bigint visitor_id FK
+  }
+  visitor_companion {
+    bigint id PK
+    bigint apply_id FK
+  }
+  visit_apply {
+    bigint id PK
+    bigint visitor_id FK
+    bigint host_user_id FK
+    bigint department_id FK
+    bigint vehicle_id FK
+  }
+  approval_record {
+    bigint id PK
+    bigint apply_id FK
+    bigint approver_user_id FK
+  }
+  pass_code {
+    bigint id PK
+    bigint apply_id FK
+  }
+  access_record {
+    bigint id PK
+    bigint apply_id FK
+    bigint visitor_id FK
+    bigint pass_code_id FK
+    bigint entry_gate_id FK
+    bigint exit_gate_id FK
+  }
+  campus_gate {
+    bigint id PK
+  }
+  blacklist {
+    bigint id PK
+    bigint visitor_id FK
+    bigint operator_user_id FK
+  }
+  notice {
+    bigint id PK
+    bigint receiver_user_id FK
+    bigint business_id
+  }
+  operation_log {
+    bigint id PK
+    bigint operator_user_id FK
+  }
+  dict_type {
+    bigint id PK
+  }
+  dict_item {
+    bigint id PK
+    bigint type_id FK
+  }
+  screenshot_record {
+    bigint id PK
+    bigint created_by FK
+  }
+  report_record {
+    bigint id PK
+    bigint generated_by FK
+  }

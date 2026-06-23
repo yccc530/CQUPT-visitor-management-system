@@ -1,0 +1,36 @@
+digraph TableRelation {
+  graph [rankdir=LR, splines=ortho, nodesep=0.45, ranksep=0.75, fontname="Microsoft YaHei", labelloc=t, label="数据库表关系图"];
+  node [shape=box, style="rounded,filled", fillcolor="#F8FBFF", color="#2B6CB0", fontname="Microsoft YaHei", fontsize=10];
+  edge [color="#4A5568", arrowsize=0.65, fontname="Microsoft YaHei", fontsize=8];
+
+  subgraph cluster_base { label="基础与权限"; color="#BBD7FF"; style="rounded"; department; sys_user; sys_role; sys_permission; sys_user_role; sys_role_permission; campus_gate; }
+  subgraph cluster_business { label="访客主流程"; color="#BDECCB"; style="rounded"; visitor; visitor_vehicle; visit_apply; visitor_companion; approval_record; pass_code; access_record; blacklist; }
+  subgraph cluster_support { label="系统支撑"; color="#FFE4B5"; style="rounded"; notice; operation_log; dict_type; dict_item; screenshot_record; report_record; }
+
+  department -> sys_user [label="department_id"];
+  department -> visit_apply [label="department_id"];
+  sys_user -> sys_user_role [label="user_id"];
+  sys_role -> sys_user_role [label="role_id"];
+  sys_role -> sys_role_permission [label="role_id"];
+  sys_permission -> sys_role_permission [label="permission_id"];
+  visitor -> visitor_vehicle [label="visitor_id"];
+  visitor -> visit_apply [label="visitor_id"];
+  visitor_vehicle -> visit_apply [label="vehicle_id"];
+  visit_apply -> visitor_companion [label="apply_id"];
+  sys_user -> visit_apply [label="host_user_id"];
+  visit_apply -> approval_record [label="apply_id"];
+  sys_user -> approval_record [label="approver_user_id"];
+  visit_apply -> pass_code [label="apply_id"];
+  visit_apply -> access_record [label="apply_id"];
+  visitor -> access_record [label="visitor_id"];
+  pass_code -> access_record [label="pass_code_id"];
+  campus_gate -> access_record [label="gate_id"];
+  sys_user -> access_record [label="guard_id"];
+  visitor -> blacklist [label="visitor_id"];
+  sys_user -> blacklist [label="operator_user_id"];
+  sys_user -> notice [label="receiver_user_id"];
+  sys_user -> operation_log [label="operator_user_id"];
+  dict_type -> dict_item [label="type_id"];
+  sys_user -> screenshot_record [label="created_by"];
+  sys_user -> report_record [label="generated_by"];
+}

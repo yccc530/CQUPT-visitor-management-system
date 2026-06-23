@@ -1,0 +1,697 @@
+\section{详细设计}
+
+\subsection{SQL 查询语句和说明}
+
+本节列出系统课程设计报告中的典型 SQL 查询。SQL 均使用 MySQL 8 语法，并尽量使用动态日期，避免演示数据随时间变化后统计为空。
+
+\subsubsection{SQL-01：查询某访客的历史预约记录}
+
+\textbf{查询目的：}查询某访客的历史预约记录。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply, visitor, department, sys\_user}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT
+  v.visitor_name,
+  v.phone,
+  va.apply_no,
+  va.visit_reason,
+  d.dept_name,
+  u.real_name AS host_name,
+  va.plan_start_time,
+  va.plan_end_time,
+  va.apply_status,
+  va.access_status
+FROM visit_apply va
+JOIN visitor v ON va.visitor_id = v.id
+LEFT JOIN department d ON va.department_id = d.id
+LEFT JOIN sys_user u ON va.host_user_id = u.id
+WHERE va.deleted = 0 AND v.phone = '13950000001'
+ORDER BY va.plan_start_time DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-02：查询某被访人的待确认预约}
+
+\textbf{查询目的：}查询某被访人的待确认预约。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply, visitor, sys\_user}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT va.apply_no, v.visitor_name, v.phone, va.visit_reason, va.plan_start_time, va.apply_status
+FROM visit_apply va
+JOIN visitor v ON va.visitor_id = v.id
+JOIN sys_user host ON va.host_user_id = host.id
+WHERE va.deleted = 0
+  AND host.username = 'teacher01'
+  AND va.apply_status = 'PENDING_HOST'
+ORDER BY va.plan_start_time ASC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-03：查询某部门的待审批预约}
+
+\textbf{查询目的：}查询某部门的待审批预约。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply, visitor, department, sys\_user}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT va.apply_no, d.dept_name, v.visitor_name, host.real_name AS host_name, va.visit_reason, va.plan_start_time, va.apply_status
+FROM visit_apply va
+JOIN visitor v ON va.visitor_id = v.id
+JOIN department d ON va.department_id = d.id
+LEFT JOIN sys_user host ON va.host_user_id = host.id
+WHERE va.deleted = 0
+  AND d.dept_name = '信息与通信工程学院'
+  AND va.apply_status IN ('HOST_CONFIRMED', 'PENDING_DEPT')
+ORDER BY va.plan_start_time ASC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-04：查询当天已入校访客}
+
+\textbf{查询目的：}查询当天已入校访客。\par
+
+\textbf{涉及数据表：}\texttt{access\_record, visit\_apply, visitor, campus\_gate, sys\_user}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT ar.id, va.apply_no, v.visitor_name, v.phone, g.gate_name AS entry_gate, guard.real_name AS guard_name, ar.entry_time
+FROM access_record ar
+JOIN visit_apply va ON ar.apply_id = va.id
+JOIN visitor v ON ar.visitor_id = v.id
+LEFT JOIN campus_gate g ON ar.entry_gate_id = g.id
+LEFT JOIN sys_user guard ON ar.entry_guard_id = guard.id
+WHERE ar.deleted = 0
+  AND ar.entry_time >= CURRENT_DATE()
+  AND ar.entry_time < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
+ORDER BY ar.entry_time DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-05：查询当天已入校但未离校访客}
+
+\textbf{查询目的：}查询当天已入校但未离校访客。\par
+
+\textbf{涉及数据表：}\texttt{access\_record, visit\_apply, visitor, department}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT ar.id, va.apply_no, v.visitor_name, v.phone, d.dept_name, ar.entry_time, ar.access_status
+FROM access_record ar
+JOIN visit_apply va ON ar.apply_id = va.id
+JOIN visitor v ON ar.visitor_id = v.id
+LEFT JOIN department d ON va.department_id = d.id
+WHERE ar.deleted = 0
+  AND ar.access_status = 'ENTERED'
+  AND ar.entry_time >= CURRENT_DATE()
+  AND ar.entry_time < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
+ORDER BY ar.entry_time DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-06：查询超时未离校访客}
+
+\textbf{查询目的：}查询超时未离校访客。\par
+
+\textbf{涉及数据表：}\texttt{access\_record, visit\_apply, visitor}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT va.apply_no, v.visitor_name, v.phone, va.plan_end_time, ar.entry_time, ar.overtime_flag, ar.abnormal_reason
+FROM access_record ar
+JOIN visit_apply va ON ar.apply_id = va.id
+JOIN visitor v ON ar.visitor_id = v.id
+WHERE ar.deleted = 0
+  AND (ar.access_status = 'OVERTIME' OR (ar.exit_time IS NULL AND va.plan_end_time < NOW()))
+ORDER BY va.plan_end_time ASC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-07：按部门统计本月访客数量}
+
+\textbf{查询目的：}按部门统计本月访客数量。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply, department}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT d.dept_name, COUNT(*) AS visitor_count
+FROM visit_apply va
+JOIN department d ON va.department_id = d.id
+WHERE va.deleted = 0
+  AND va.plan_start_time >= DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
+  AND va.plan_start_time < DATE_ADD(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+GROUP BY d.id, d.dept_name
+ORDER BY visitor_count DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-08：按校门统计本月通行数量}
+
+\textbf{查询目的：}按校门统计本月通行数量。\par
+
+\textbf{涉及数据表：}\texttt{campus\_gate, access\_record}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT g.gate_name,
+       SUM(CASE WHEN ar.entry_gate_id = g.id THEN 1 ELSE 0 END) AS entry_count,
+       SUM(CASE WHEN ar.exit_gate_id = g.id THEN 1 ELSE 0 END) AS exit_count,
+       SUM(CASE WHEN ar.entry_gate_id = g.id THEN 1 ELSE 0 END) + SUM(CASE WHEN ar.exit_gate_id = g.id THEN 1 ELSE 0 END) AS total_count
+FROM campus_gate g
+LEFT JOIN access_record ar ON ar.deleted = 0
+  AND (ar.entry_gate_id = g.id OR ar.exit_gate_id = g.id)
+  AND COALESCE(ar.entry_time, ar.exit_time) >= DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
+  AND COALESCE(ar.entry_time, ar.exit_time) < DATE_ADD(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+WHERE g.deleted = 0
+GROUP BY g.id, g.gate_name
+ORDER BY total_count DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-09：查询黑名单访客}
+
+\textbf{查询目的：}查询黑名单访客。\par
+
+\textbf{涉及数据表：}\texttt{blacklist, visitor}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT b.id, v.visitor_name, b.phone, b.id_number, b.reason, b.level, b.status, b.start_time, b.end_time
+FROM blacklist b
+LEFT JOIN visitor v ON b.visitor_id = v.id
+WHERE b.deleted = 0 AND b.status = 'ACTIVE'
+ORDER BY b.level DESC, b.start_time DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-10：查询某预约的完整审批记录}
+
+\textbf{查询目的：}查询某预约的完整审批记录。\par
+
+\textbf{涉及数据表：}\texttt{approval\_record, visit\_apply, sys\_user}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT va.apply_no, ar.approval_step, approver.real_name AS approver_name, ar.approval_result, ar.approval_comment, ar.approval_time
+FROM approval_record ar
+JOIN visit_apply va ON ar.apply_id = va.id
+LEFT JOIN sys_user approver ON ar.approver_user_id = approver.id
+WHERE ar.deleted = 0 AND va.apply_no = (SELECT apply_no FROM visit_apply ORDER BY id LIMIT 1)
+ORDER BY ar.sort_order ASC, ar.approval_time ASC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-11：查询某访客的车辆和随行人员}
+
+\textbf{查询目的：}查询某访客的车辆和随行人员。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply, visitor, visitor\_vehicle, visitor\_companion}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT va.apply_no, v.visitor_name, vv.plate_no, vv.vehicle_type, vv.color, vc.companion_name, vc.phone AS companion_phone, vc.relation_remark
+FROM visit_apply va
+JOIN visitor v ON va.visitor_id = v.id
+LEFT JOIN visitor_vehicle vv ON va.vehicle_id = vv.id
+LEFT JOIN visitor_companion vc ON vc.apply_id = va.id AND vc.deleted = 0
+WHERE va.deleted = 0 AND va.id = 2;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-12：查询系统操作日志}
+
+\textbf{查询目的：}查询系统操作日志。\par
+
+\textbf{涉及数据表：}\texttt{operation\_log}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT operator_name, module_name, operation_type, request_method, request_url, operation_result, ip_address, operation_time
+FROM operation_log
+WHERE deleted = 0
+ORDER BY operation_time DESC
+LIMIT 20;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-13：查询今日访客概览}
+
+\textbf{查询目的：}查询今日访客概览。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply, access\_record, blacklist}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT
+  (SELECT COUNT(*) FROM visit_apply WHERE deleted = 0 AND plan_start_time >= CURRENT_DATE() AND plan_start_time < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)) AS today_visitors,
+  (SELECT COUNT(*) FROM access_record WHERE deleted = 0 AND access_status = 'ENTERED') AS current_visitors,
+  (SELECT COUNT(*) FROM access_record WHERE deleted = 0 AND access_status = 'OVERTIME') AS overtime_visitors,
+  (SELECT COUNT(*) FROM visit_apply WHERE deleted = 0 AND apply_status IN ('PENDING_HOST','HOST_CONFIRMED','PENDING_DEPT')) AS pending_approvals,
+  (SELECT COUNT(*) FROM blacklist WHERE deleted = 0 AND status = 'ACTIVE') AS blacklist_risks;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-14：查询近七天访客趋势}
+
+\textbf{查询目的：}查询近七天访客趋势。\par
+
+\textbf{涉及数据表：}\texttt{days, visit\_apply}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+WITH RECURSIVE days AS (
+  SELECT DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AS stat_date
+  UNION ALL
+  SELECT DATE_ADD(stat_date, INTERVAL 1 DAY) FROM days WHERE stat_date < CURRENT_DATE()
+)
+SELECT DATE_FORMAT(days.stat_date, '%m-%d') AS stat_date,
+       COUNT(va.id) AS visitor_count
+FROM days
+LEFT JOIN visit_apply va ON va.deleted = 0
+  AND va.plan_start_time >= days.stat_date
+  AND va.plan_start_time < DATE_ADD(days.stat_date, INTERVAL 1 DAY)
+GROUP BY days.stat_date
+ORDER BY days.stat_date;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-15：查询审批通过率}
+
+\textbf{查询目的：}查询审批通过率。\par
+
+\textbf{涉及数据表：}\texttt{approval\_record}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT
+  SUM(CASE WHEN approval_result = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count,
+  SUM(CASE WHEN approval_result IN ('REJECTED','RETURNED') THEN 1 ELSE 0 END) AS rejected_count,
+  SUM(CASE WHEN approval_result = 'PENDING' THEN 1 ELSE 0 END) AS pending_count,
+  ROUND(SUM(CASE WHEN approval_result = 'APPROVED' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS pass_rate
+FROM approval_record
+WHERE deleted = 0 AND approval_step = 'DEPT_APPROVAL';
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-16：查询本周访客数}
+
+\textbf{查询目的：}查询本周访客数。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT COUNT(*) AS this_week_visitors
+FROM visit_apply
+WHERE deleted = 0
+  AND plan_start_time >= DATE_SUB(CURRENT_DATE(), INTERVAL WEEKDAY(CURRENT_DATE()) DAY)
+  AND plan_start_time < DATE_ADD(DATE_SUB(CURRENT_DATE(), INTERVAL WEEKDAY(CURRENT_DATE()) DAY), INTERVAL 7 DAY);
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-17：查询本月访客数}
+
+\textbf{查询目的：}查询本月访客数。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT COUNT(*) AS this_month_visitors
+FROM visit_apply
+WHERE deleted = 0
+  AND plan_start_time >= DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
+  AND plan_start_time < DATE_ADD(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01'), INTERVAL 1 MONTH);
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-18：访问事由分布}
+
+\textbf{查询目的：}访问事由分布。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT reason_type, COUNT(*) AS reason_count
+FROM (
+  SELECT CASE
+    WHEN visit_reason LIKE '%家长%' OR visit_reason LIKE '%学籍%' THEN '学生家长'
+    WHEN visit_reason LIKE '%企业%' OR visit_reason LIKE '%合作%' THEN '企业合作'
+    WHEN visit_reason LIKE '%维修%' OR visit_reason LIKE '%后勤%' THEN '后勤维修'
+    WHEN visit_reason LIKE '%学术%' OR visit_reason LIKE '%研讨%' THEN '学术交流'
+    WHEN visit_reason LIKE '%面试%' OR visit_reason LIKE '%就业%' THEN '面试招聘'
+    WHEN visit_reason LIKE '%快递%' OR visit_reason LIKE '%配送%' THEN '快递配送'
+    WHEN visit_reason LIKE '%校友%' THEN '校友返校'
+    WHEN visit_reason LIKE '%专家%' OR visit_reason LIKE '%评审%' OR visit_reason LIKE '%讲座%' THEN '外聘专家'
+    ELSE '其他'
+  END AS reason_type
+  FROM visit_apply
+  WHERE deleted = 0
+    AND plan_start_time >= DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
+    AND plan_start_time < DATE_ADD(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+) t
+GROUP BY reason_type
+ORDER BY reason_count DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-19：审批状态分布}
+
+\textbf{查询目的：}审批状态分布。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT apply_status, COUNT(*) AS status_count
+FROM visit_apply
+WHERE deleted = 0
+GROUP BY apply_status
+ORDER BY status_count DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-20：入校离校状态分布}
+
+\textbf{查询目的：}入校离校状态分布。\par
+
+\textbf{涉及数据表：}\texttt{visit\_apply}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT access_status, COUNT(*) AS status_count
+FROM visit_apply
+WHERE deleted = 0
+GROUP BY access_status
+ORDER BY status_count DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-21：黑名单风险数量}
+
+\textbf{查询目的：}黑名单风险数量。\par
+
+\textbf{涉及数据表：}\texttt{blacklist}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT level, status, COUNT(*) AS risk_count
+FROM blacklist
+WHERE deleted = 0
+GROUP BY level, status
+ORDER BY risk_count DESC;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsubsection{SQL-22：最近操作日志}
+
+\textbf{查询目的：}最近操作日志。\par
+
+\textbf{涉及数据表：}\texttt{operation\_log}。\par
+
+\begin{lstlisting}[style=sqlstyle]
+
+SELECT operator_name, module_name, operation_type, operation_result, request_url, operation_time
+FROM operation_log
+WHERE deleted = 0
+ORDER BY operation_time DESC
+LIMIT 10;
+
+\end{lstlisting}
+
+查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+
+\subsection{建表 SQL 摘要}
+
+\begin{lstlisting}[style=sqlstyle]
+
+﻿-- 重庆邮电大学智慧访客预约与出入校管理系统
+-- MySQL 8 schema script
+
+USE cqupt_visitor_system;
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS report_record;
+DROP TABLE IF EXISTS screenshot_record;
+DROP TABLE IF EXISTS dict_item;
+DROP TABLE IF EXISTS operation_log;
+DROP TABLE IF EXISTS notice;
+DROP TABLE IF EXISTS blacklist;
+DROP TABLE IF EXISTS access_record;
+DROP TABLE IF EXISTS pass_code;
+DROP TABLE IF EXISTS approval_record;
+DROP TABLE IF EXISTS visitor_companion;
+DROP TABLE IF EXISTS visit_apply;
+DROP TABLE IF EXISTS visitor_vehicle;
+DROP TABLE IF EXISTS sys_role_permission;
+DROP TABLE IF EXISTS sys_user_role;
+DROP TABLE IF EXISTS sys_user;
+DROP TABLE IF EXISTS dict_type;
+DROP TABLE IF EXISTS visitor;
+DROP TABLE IF EXISTS campus_gate;
+DROP TABLE IF EXISTS sys_permission;
+DROP TABLE IF EXISTS sys_role;
+DROP TABLE IF EXISTS department;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE department (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '部门主键',
+  parent_id BIGINT NULL COMMENT '上级部门',
+  dept_code VARCHAR(50) NOT NULL COMMENT '部门编码',
+  dept_name VARCHAR(100) NOT NULL COMMENT '部门名称',
+  leader_user_id BIGINT NULL COMMENT '部门负责人用户编号',
+  phone VARCHAR(20) NULL COMMENT '联系电话',
+  sort_order INT NOT NULL DEFAULT 0 COMMENT '排序号',
+  status VARCHAR(30) NOT NULL DEFAULT 'ENABLED' COMMENT '部门状态：ENABLED、DISABLED',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记：0未删除，1已删除',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_department_code (dept_code),
+  KEY idx_department_parent (parent_id),
+  KEY idx_department_leader (leader_user_id),
+  KEY idx_department_status (status),
+  CONSTRAINT fk_department_parent FOREIGN KEY (parent_id) REFERENCES department(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='部门表';
+
+CREATE TABLE sys_role (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '角色主键',
+  role_code VARCHAR(50) NOT NULL COMMENT '角色编码',
+  role_name VARCHAR(50) NOT NULL COMMENT '角色名称',
+  role_desc VARCHAR(255) NULL COMMENT '角色说明',
+  status VARCHAR(30) NOT NULL DEFAULT 'ENABLED' COMMENT '角色状态：ENABLED、DISABLED',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_role_code (role_code),
+  KEY idx_sys_role_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色表';
+
+CREATE TABLE sys_permission (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '权限主键',
+  permission_code VARCHAR(100) NOT NULL COMMENT '权限编码',
+  permission_name VARCHAR(100) NOT NULL COMMENT '权限名称',
+  permission_type VARCHAR(30) NOT NULL DEFAULT 'MENU' COMMENT '权限类型：MENU、BUTTON、API',
+  parent_id BIGINT NULL COMMENT '父级权限',
+  route_path VARCHAR(200) NULL COMMENT '前端路由',
+  component_path VARCHAR(200) NULL COMMENT '前端组件路径',
+  api_path VARCHAR(200) NULL COMMENT '后端接口路径',
+  sort_order INT NOT NULL DEFAULT 0 COMMENT '排序号',
+  status VARCHAR(30) NOT NULL DEFAULT 'ENABLED' COMMENT '权限状态',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_permission_code (permission_code),
+  KEY idx_sys_permission_parent (parent_id),
+  KEY idx_sys_permission_type (permission_type),
+  CONSTRAINT fk_permission_parent FOREIGN KEY (parent_id) REFERENCES sys_permission(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='权限表';
+
+CREATE TABLE campus_gate (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '校门主键',
+  gate_code VARCHAR(50) NOT NULL COMMENT '校门编码',
+  gate_name VARCHAR(100) NOT NULL COMMENT '校门名称',
+  gate_location VARCHAR(200) NULL COMMENT '校门位置',
+  gate_type VARCHAR(30) NOT NULL DEFAULT 'NORMAL' COMMENT '校门类型：NORMAL、VEHICLE、PEDESTRIAN',
+  status VARCHAR(30) NOT NULL DEFAULT 'ENABLED' COMMENT '校门状态',
+  remark VARCHAR(255) NULL COMMENT '备注',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_campus_gate_code (gate_code),
+  KEY idx_campus_gate_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='校门表';
+
+CREATE TABLE visitor (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '访客主键',
+  visitor_name VARCHAR(50) NOT NULL COMMENT '访客姓名',
+  id_type VARCHAR(30) NOT NULL DEFAULT 'ID_CARD' COMMENT '证件类型',
+  id_number VARCHAR(50) NOT NULL COMMENT '证件号码',
+  phone VARCHAR(20) NOT NULL COMMENT '手机号',
+  company VARCHAR(100) NULL COMMENT '单位',
+  gender VARCHAR(10) NULL COMMENT '性别',
+  visitor_level VARCHAR(30) NOT NULL DEFAULT 'NORMAL' COMMENT '访客等级：NORMAL、VIP、RISK',
+  status VARCHAR(30) NOT NULL DEFAULT 'NORMAL' COMMENT '访客状态',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_visitor_id_number (id_type, id_number),
+  KEY idx_visitor_phone (phone),
+  KEY idx_visitor_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='访客表';
+
+CREATE TABLE dict_type (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '字典类型主键',
+  type_code VARCHAR(50) NOT NULL COMMENT '字典类型编码',
+  type_name VARCHAR(100) NOT NULL COMMENT '字典类型名称',
+  status VARCHAR(30) NOT NULL DEFAULT 'ENABLED' COMMENT '状态',
+  remark VARCHAR(255) NULL COMMENT '备注',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_dict_type_code (type_code),
+  KEY idx_dict_type_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='字典类型表';
+
+CREATE TABLE sys_user (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '用户主键',
+  username VARCHAR(50) NOT NULL COMMENT '登录账号',
+  password_hash VARCHAR(255) NOT NULL COMMENT '加密后的密码',
+  real_name VARCHAR(50) NOT NULL COMMENT '真实姓名',
+  phone VARCHAR(20) NOT NULL COMMENT '手机号',
+  email VARCHAR(100) NULL COMMENT '邮箱',
+  department_id BIGINT NULL COMMENT '所属部门',
+  user_type VARCHAR(30) NOT NULL COMMENT '用户类型：HOST、APPROVER、GUARD、ADMIN、MANAGER',
+  status VARCHAR(30) NOT NULL DEFAULT 'ENABLED' COMMENT '账号状态',
+  last_login_time DATETIME NULL COMMENT '最近登录时间',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_user_username (username),
+  KEY idx_sys_user_phone (phone),
+  KEY idx_sys_user_department (department_id),
+  KEY idx_sys_user_status (status),
+  CONSTRAINT fk_user_department FOREIGN KEY (department_id) REFERENCES department(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统用户表';
+
+ALTER TABLE department
+  ADD CONSTRAINT fk_department_leader FOREIGN KEY (leader_user_id) REFERENCES sys_user(id) ON DELETE SET NULL;
+
+CREATE TABLE sys_user_role (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '关联主键',
+  user_id BIGINT NOT NULL COMMENT '用户编号',
+  role_id BIGINT NOT NULL COMMENT '角色编号',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_user_role (user_id, role_id),
+  KEY idx_user_role_role (role_id),
+  CONSTRAINT fk_user_role_user FOREIGN KEY (user_id) REFERENCES sys_user(id) ON DELETE CASCADE,
+  CONSTRAINT fk_user_role_role FOREIGN KEY (role_id) REFERENCES sys_role(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户角色关联表';
+
+CREATE TABLE sys_role_permission (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '关联主键',
+  role_id BIGINT NOT NULL COMMENT '角色编号',
+  permission_id BIGINT NOT NULL COMMENT '权限编号',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_role_permission (role_id, permission_id),
+  KEY idx_role_permission_permission (permission_id),
+  CONSTRAINT fk_role_permission_role FOREIGN KEY (role_id) REFERENCES sys_role(id) ON DELETE CASCADE,
+  CONSTRAINT fk_role_permission_permission FOREIGN KEY (permission_id) REFERENCES sys_permission(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色权限关联表';
+
+CREATE TABLE visitor_vehicle (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '车辆主键',
+  visitor_id BIGINT NOT NULL COMMENT '访客编号',
+  plate_no VARCHAR(20) NOT NULL COMMENT '车牌号',
+  vehicle_type VARCHAR(30) NOT NULL DEFAULT 'CAR' COMMENT '车辆类型',
+  color VARCHAR(30) NULL COMMENT '车辆颜色',
+  brand VARCHAR(50) NULL COMMENT '品牌',
+  status VARCHAR(30) NOT NULL DEFAULT 'NORMAL' COMMENT '车辆状态',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_vehicle_plate (plate_no),
+  KEY idx_vehicle_visitor (visitor_id),
+  CONSTRAINT fk_vehicle_visitor FOREIGN KEY (visitor_id) REFERENCES visitor(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='访客车辆表';
+
+CREATE TABLE visit_apply (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '预约主键',
+  apply_no VARCHAR(50) NOT NULL COMMENT '预约编号',
+  visitor_id BIGINT NOT NULL COMMENT '访客编号',
+  host_user_id BIGINT NOT NULL COMMENT '被访人编号',
+  department_id BIGINT NOT NULL COMMENT '访问部门编号',
+  vehicle_id BIGINT NULL COMMENT '车辆编号',
+  visit_reason VARCHAR(255) NOT NULL COMMENT '来访事由',
+  plan_start_time DATETIME NOT NULL COMMENT '计划开始时间',
+  plan_end_time DATETIME NOT NULL COMMENT '计划结束时间',
+  apply_status VARCHAR(30) NOT NULL DEFAULT 'PENDING_HOST' COMMENT '预约状态',
+  access_status VARCHAR(30) NOT NULL DEFAULT 'NOT_ENTERED' COMMENT '通行状态',
+  companion_count INT NOT NULL DEFAULT 0 COMMENT '随行人数',
+  submit_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
+  cancel_time DATETIME NULL COMMENT '取消时间',
+
+\end{lstlisting}

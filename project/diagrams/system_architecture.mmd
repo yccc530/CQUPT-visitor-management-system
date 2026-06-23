@@ -1,57 +1,40 @@
-flowchart TB
-  subgraph Client[前端访问层]
-    Browser[浏览器]
-    Vue[Vue 3 + Vite]
-    Element[Element Plus + ECharts]
+flowchart LR
+  subgraph Client[浏览器前端]
+    Browser[Vue 3 + Vite]
+    UI[Element Plus + ECharts]
   end
 
-  subgraph Frontend[前端工程层]
-    Router[Vue Router 路由控制]
-    Axios[Axios 请求拦截器]
-    Token[Token 本地存储]
-    Pages[业务页面组件]
-  end
-
-  subgraph Backend[后端服务层]
-    Controller[Spring Boot Controller]
-    Security[Spring Security + JWT]
-    Service[业务 Service]
-    Workflow[访客流程服务]
+  subgraph Backend[Spring Boot 后端]
+    API[REST API /api]
+    Auth[JWT 鉴权]
+    Service[业务服务层]
     Mapper[MyBatis Plus Mapper]
-    Swagger[Swagger 接口文档]
+    Swagger[Swagger / Knife4j]
   end
 
-  subgraph Data[数据持久层]
-    MySQL[(MySQL 8 数据库)]
-    Tables[21 张业务数据表]
+  subgraph Database[数据库]
+    MySQL[(MySQL 8\ncqupt_visitor_system)]
   end
 
-  subgraph Automation[自动化支撑层]
-    Playwright[Playwright 自动截图]
-    Manifest[screenshots/manifest.json]
-    ReportScript[generate_report.py]
-    Markdown[Markdown 课程设计报告]
-    Word[Word 文档导出]
+  subgraph Automation[自动化支撑]
+    Playwright[Playwright 截图脚本]
+    ReportScript[LaTeX / Markdown 报告生成脚本]
+    DiagramFiles[diagrams/*.mmd / *.dot]
+    ScreenshotDir[screenshots/*.png]
+    ReportDir[docs / reports 输出]
   end
 
-  Browser --> Vue
-  Vue --> Element
-  Vue --> Router
-  Router --> Pages
-  Pages --> Axios
-  Axios --> Token
-  Axios -->|/api| Controller
-  Controller --> Security
-  Security --> Service
-  Service --> Workflow
+  Browser -->|Axios + Token| API
+  UI --> Browser
+  API --> Auth
+  API --> Service
   Service --> Mapper
   Mapper --> MySQL
-  MySQL --> Tables
-  Controller --> Swagger
+  Swagger --> API
 
-  Playwright --> Browser
-  Playwright --> Manifest
-  Manifest --> ReportScript
-  MySQL --> ReportScript
-  ReportScript --> Markdown
-  ReportScript --> Word
+  Playwright -->|自动登录与访问页面| Browser
+  Playwright -->|保存截图与 manifest| ScreenshotDir
+  DiagramFiles -->|导出 PDF/SVG| ReportScript
+  ScreenshotDir --> ReportScript
+  MySQL -->|表结构、SQL、统计结果| ReportScript
+  ReportScript -->|生成课程设计报告| ReportDir
