@@ -7,7 +7,7 @@
     "filePath": "screenshots/01_login.png",
     "description": "展示系统标题、登录表单和测试账号入口。",
     "reportSection": "系统实现与测试",
-    "captureTime": "2026-06-22T16:44:23.632Z",
+    "captureTime": "2026-06-23T08:57:56.410Z",
     "status": "SUCCESS"
   },
   {
@@ -18,7 +18,7 @@
     "filePath": "screenshots/02_dashboard.png",
     "description": "展示今日访客、当前在校、超时未离校、审批待处理和统计图表。",
     "reportSection": "主界面截图",
-    "captureTime": "2026-06-22T16:44:27.421Z",
+    "captureTime": "2026-06-23T08:58:00.910Z",
     "status": "SUCCESS"
   },
   {
@@ -29,7 +29,7 @@
     "filePath": "screenshots/03_visitor_apply.png",
     "description": "展示访客预约申请表单。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:30.651Z",
+    "captureTime": "2026-06-23T08:58:04.214Z",
     "status": "SUCCESS"
   },
   {
@@ -40,7 +40,7 @@
     "filePath": "screenshots/04_my_apply.png",
     "description": "展示访客本人预约记录和状态。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:32.151Z",
+    "captureTime": "2026-06-23T08:58:05.721Z",
     "status": "SUCCESS"
   },
   {
@@ -51,7 +51,7 @@
     "filePath": "screenshots/05_host_confirm.png",
     "description": "展示被访人待确认预约列表。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:35.444Z",
+    "captureTime": "2026-06-23T08:58:09.140Z",
     "status": "SUCCESS"
   },
   {
@@ -62,7 +62,7 @@
     "filePath": "screenshots/06_department_approval.png",
     "description": "展示部门审批人员处理预约申请。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:38.757Z",
+    "captureTime": "2026-06-23T08:58:12.588Z",
     "status": "SUCCESS"
   },
   {
@@ -73,7 +73,7 @@
     "filePath": "screenshots/07_gate_check.png",
     "description": "展示通行码、预约编号、手机号或证件号核验界面。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:41.956Z",
+    "captureTime": "2026-06-23T08:58:15.899Z",
     "status": "SUCCESS"
   },
   {
@@ -84,7 +84,7 @@
     "filePath": "screenshots/08_enter_register.png",
     "description": "展示门岗入校登记页面。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:43.372Z",
+    "captureTime": "2026-06-23T08:58:17.327Z",
     "status": "SUCCESS"
   },
   {
@@ -95,7 +95,7 @@
     "filePath": "screenshots/09_leave_register.png",
     "description": "展示门岗离校登记页面。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:44.810Z",
+    "captureTime": "2026-06-23T08:58:18.763Z",
     "status": "SUCCESS"
   },
   {
@@ -106,7 +106,7 @@
     "filePath": "screenshots/10_current_visitor.png",
     "description": "展示当前已入校未离校访客。",
     "reportSection": "查询页截图",
-    "captureTime": "2026-06-22T16:44:46.286Z",
+    "captureTime": "2026-06-23T08:58:20.296Z",
     "status": "SUCCESS"
   },
   {
@@ -117,7 +117,7 @@
     "filePath": "screenshots/11_overtime_visitor.png",
     "description": "展示超过计划离校时间仍未离校访客。",
     "reportSection": "查询页截图",
-    "captureTime": "2026-06-22T16:44:47.752Z",
+    "captureTime": "2026-06-23T08:58:21.761Z",
     "status": "SUCCESS"
   },
   {
@@ -128,7 +128,7 @@
     "filePath": "screenshots/12_blacklist.png",
     "description": "展示黑名单管理与风险访客记录。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:49.286Z",
+    "captureTime": "2026-06-23T08:58:23.280Z",
     "status": "SUCCESS"
   },
   {
@@ -139,7 +139,7 @@
     "filePath": "screenshots/13_visit_record.png",
     "description": "展示全校访客预约和访问记录查询。",
     "reportSection": "查询页截图",
-    "captureTime": "2026-06-22T16:44:52.622Z",
+    "captureTime": "2026-06-23T08:58:26.646Z",
     "status": "SUCCESS"
   },
   {
@@ -150,7 +150,7 @@
     "filePath": "screenshots/14_statistics.png",
     "description": "展示访客趋势、部门排行、校门通行和审批通过率。",
     "reportSection": "报表页截图",
-    "captureTime": "2026-06-22T16:44:54.136Z",
+    "captureTime": "2026-06-23T08:58:28.150Z",
     "status": "SUCCESS"
   },
   {
@@ -161,7 +161,7 @@
     "filePath": "screenshots/15_user_manage.png",
     "description": "展示系统用户管理。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:55.674Z",
+    "captureTime": "2026-06-23T08:58:29.653Z",
     "status": "SUCCESS"
   },
   {
@@ -172,7 +172,7 @@
     "filePath": "screenshots/16_role_permission.png",
     "description": "展示角色权限管理。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:57.156Z",
+    "captureTime": "2026-06-23T08:58:31.143Z",
     "status": "SUCCESS"
   },
   {
@@ -183,7 +183,7 @@
     "filePath": "screenshots/17_department_manage.png",
     "description": "展示部门基础数据维护。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:44:58.633Z",
+    "captureTime": "2026-06-23T08:58:32.602Z",
     "status": "SUCCESS"
   },
   {
@@ -194,7 +194,7 @@
     "filePath": "screenshots/18_gate_manage.png",
     "description": "展示校门基础数据维护。",
     "reportSection": "模块界面截图",
-    "captureTime": "2026-06-22T16:45:00.107Z",
+    "captureTime": "2026-06-23T08:58:34.105Z",
     "status": "SUCCESS"
   },
   {
@@ -205,7 +205,7 @@
     "filePath": "screenshots/19_system_log.png",
     "description": "展示关键业务操作日志。",
     "reportSection": "系统实现与测试",
-    "captureTime": "2026-06-22T16:45:01.584Z",
+    "captureTime": "2026-06-23T08:58:35.628Z",
     "status": "SUCCESS"
   }
 ]
