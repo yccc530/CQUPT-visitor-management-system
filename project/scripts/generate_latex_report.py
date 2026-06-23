@@ -209,7 +209,7 @@ chapter01 += table('系统基本信息', ['项目', '内容'], [
     ['中文系统名称', '重庆邮电大学智慧访客预约与出入校管理系统'],
     ['英文系统名称', 'Smart Visitor Reservation and Campus Access Management System of Chongqing University of Posts and Telecommunications'],
     ['课程设计定位', '数据库原理期末大作业，重点展示需求分析、数据流程、E-R 建模、关系模式、SQL 查询和系统实现。'],
-    ['技术形态', 'Vue 3 前端、Spring Boot 3 后端、MySQL 8 数据库、Playwright 自动截图、LaTeX 自动报告。']
+    ['技术形态', 'Vue 3 前端、Spring Boot 3 后端、MySQL 8 数据库、运行界面截图和课程设计报告。']
 ], [0.24, 0.70])
 chapter01 += r'''
 \subsection{设计意图}
@@ -269,7 +269,7 @@ run_rows = [
     ['数据库', 'MySQL 8，InnoDB，utf8mb4 字符集。'],
     ['后端', 'JDK 17、Spring Boot 3、MyBatis Plus、JWT、Swagger/OpenAPI。'],
     ['前端', 'Node.js、Vue 3、Vite、Element Plus、Axios、Vue Router、ECharts。'],
-    ['自动化', 'Playwright 负责截图，XeLaTeX 负责编译最终报告。']
+    ['运行展示', '通过代表性页面截图记录系统主要功能的实现效果。']
 ]
 security_rows = [
     ['认证', '登录成功返回 JWT Token，后续请求携带 Authorization 请求头。'],
@@ -323,7 +323,7 @@ chapter03 = r'''
 系统设计将需求分析结果转换为可实现的数据模型和系统结构。本章包括概念结构设计、E-R 图、逻辑结构设计、关系模式、系统功能模块图和其它设计图，保证概念模型、逻辑结构、系统接口和运行界面之间保持一致。
 
 \subsection{概念结构设计说明}
-概念结构设计阶段从业务流程中抽取实体和联系。核心业务实体包括 visitor、visit\_apply、approval\_record、pass\_code、access\_record、blacklist、campus\_gate 等；权限实体包括 sys\_user、sys\_role、sys\_permission 以及用户角色、角色权限中间表；支撑实体包括 notice、operation\_log、dict\_type、dict\_item、screenshot\_record 和 report\_record。设计时将“访客提交预约”作为主线，确保每个实体都能在核心流程中找到业务来源。
+概念结构设计阶段主要根据访客预约、审批流转、门岗通行和统计查询等业务过程抽取实体与联系。核心业务部分包括访客、预约申请、审批记录、通行凭证、出入校记录、黑名单和校门等实体；权限管理部分包括系统用户、角色、权限及其授权关系；系统支撑部分包括通知消息、操作日志、数据字典、截图记录和材料归档记录等实体。各实体围绕“访客提交预约申请”这一主线展开，能够覆盖从预约提交、审批确认、通行核验到访问归档的完整过程。
 '''
 chapter03 += table('主要实体及存在原因', ['实体', '存在原因'], [
     ['visitor', '保存访客身份基础信息，避免同一访客多次预约时重复录入。'],
@@ -349,21 +349,28 @@ chapter03 += r'''
 \subsection{逻辑结构设计说明}
 逻辑结构设计将概念实体转换为 MySQL 关系表。实体表统一使用 \texttt{id} 作为主键，时间字段统一使用 \texttt{create\_time}、\texttt{update\_time}，软删除字段统一使用 \texttt{deleted}。多对多关系通过 sys\_user\_role 和 sys\_role\_permission 中间表表达；一对多关系通过外键字段或业务关联字段表达；预约、审批、通行和出入校状态通过状态字段表达。
 '''
-chapter03 += table('逻辑表结构摘要', ['表名', '关键字段摘要', '说明'], summary_rows, [0.30, 0.46, 0.18])
+logic_summary_rows = [
+    ['权限与组织', '系统用户表、角色表、权限表、用户角色关联表、角色权限关联表、部门表', '管理登录用户、部门归属、角色授权和菜单接口权限，是系统访问控制的基础。', '用户与角色、角色与权限均采用中间表表示多对多关系。'],
+    ['访客基础', '访客表、访客车辆表、随行人员表、黑名单表', '保存访客身份、车辆、同行人员和风险名单，为预约申请和门岗核验提供基础数据。', '访客身份、手机号、车辆和黑名单信息参与预约与核验约束。'],
+    ['预约审批', '预约申请表、审批记录表、通行凭证表', '保存从提交申请、被访人确认、部门审批到生成通行凭证的核心业务链路。', '预约编号唯一，审批记录按环节和时间形成完整处理轨迹。'],
+    ['出入校管理', '出入校记录表、校门表', '记录门岗核验、入校登记、离校登记、当前在校和超时未离校等访问状态。', '出入校记录关联预约、访客、通行凭证、校门和安保人员。'],
+    ['消息与日志', '通知消息表、操作日志表', '保存预约提醒、审批提醒、风险提醒和关键操作审计记录。', '通知关联接收人和业务对象，日志记录操作人、模块和处理结果。'],
+    ['字典与材料', '字典类型表、字典项表、截图记录表、报告记录表', '维护状态、类型等基础字典，并保存课程展示材料的整理记录。', '字典项归属于字典类型，材料记录保存编号、路径、状态和时间。'],
+]
+chapter03 += table('主要关系表设计摘要', ['设计分组', '主要关系表', '设计重点', '主要约束'], logic_summary_rows, [0.14, 0.27, 0.36, 0.17])
 chapter03 += r'''
 \subsection{关系模式说明}
-系统关系模式与 MySQL 表结构一一对应。核心关系模式包括 visitor(id, visitor\_name, phone, id\_number, ...)、visit\_apply(id, apply\_no, visitor\_id, host\_user\_id, department\_id, apply\_status, access\_status, ...)、approval\_record(id, apply\_id, approval\_step, approval\_result, ...)、pass\_code(id, apply\_id, code, valid\_from, valid\_to, status, ...)、access\_record(id, apply\_id, visitor\_id, entry\_gate\_id, exit\_gate\_id, access\_status, ...)。这些关系模式既能表达实体属性，也能表达核心业务联系。
+系统关系模式由概念结构转换得到，重点保持实体、联系和业务约束之间的一致性。访客表保存校外人员身份基础信息；预约申请表保存一次访问申请，并关联访客、被访人、部门、车辆和访问时间；审批记录表保存被访人确认、部门审批等环节的处理结果；通行凭证表保存审批通过后的校验凭证和有效期；出入校记录表保存门岗核验后的入校、离校和异常状态；黑名单表用于记录限制入校或需要重点关注的风险人员。用户、角色和权限之间的多对多关系通过中间表表达，既保证权限控制清晰，也避免在单个实体中重复保存授权信息。
 
 \subsection{系统功能模块图}
-系统功能模块图按角色和业务域划分为访客端、被访人端、审批管理、门岗管理、访客记录、安全管理、统计报表、系统管理和自动化支撑等模块。
+系统功能模块图按角色和业务域划分为访客端、被访人端、审批管理、门岗管理、访客记录、安全管理、统计报表、系统管理和系统支撑等模块。
 '''
 chapter03 += diagram_block('系统功能模块图', 'diagrams/system_module.mmd', '模块图展示系统功能分解及各模块边界，便于说明前端菜单、后端接口和权限控制的对应关系。', 'mmdc -i diagrams/system_module.mmd -o report-latex/figures/system_module.pdf')
 chapter03 += r'\subsection{其它设计图}'
 chapter03 += diagram_block('访客预约审批流程图', 'diagrams/visitor_workflow.mmd', '访客预约审批流程图展示从预约提交到审批通过或拒绝的状态流转，并体现黑名单拦截、被访人拒绝和部门审批拒绝等异常分支。', 'mmdc -i diagrams/visitor_workflow.mmd -o report-latex/figures/visitor_workflow.pdf')
 chapter03 += diagram_block('门岗核验入校流程图', 'diagrams/gate_check_workflow.mmd', '门岗核验流程图展示通行码核验、时间有效性检查、黑名单检查、入校登记、离校登记和超时未离校处理。', 'mmdc -i diagrams/gate_check_workflow.mmd -o report-latex/figures/gate_check_workflow.pdf')
-chapter03 += diagram_block('系统架构图', 'diagrams/system_architecture.mmd', '系统架构图展示浏览器前端、Spring Boot 后端、MySQL 数据库、Playwright 截图脚本和 LaTeX 报告生成脚本之间的关系。', 'mmdc -i diagrams/system_architecture.mmd -o report-latex/figures/system_architecture.pdf')
+chapter03 += diagram_block('系统架构图', 'diagrams/system_architecture.mmd', '系统架构图展示浏览器前端、Spring Boot 后端、MySQL 数据库、运行界面截图和课程设计材料之间的关系。', 'mmdc -i diagrams/system_architecture.mmd -o report-latex/figures/system_architecture.pdf')
 chapter03 += diagram_block('数据库表关系图', 'diagrams/table_relation.mmd', '数据库表关系图适合放入附录，用于展示主外键关系和表间依赖。', 'mmdc -i diagrams/table_relation.mmd -o report-latex/figures/table_relation.pdf')
-chapter03 += diagram_block('自动截图与报告生成流程图', 'diagrams/automation_report_workflow.mmd', '自动化支撑流程图展示演示数据、页面截图和报告生成之间的衔接关系，说明系统如何形成可复核的课程设计材料。', 'mmdc -i diagrams/automation_report_workflow.mmd -o report-latex/figures/automation_report_workflow.pdf')
 write(chapters / '03_system_design.tex', chapter03)
 
 # 04 detail design
@@ -410,20 +417,20 @@ test_rows = [
     ['TC-11', '入校登记', '核验通过后登记入校', '生成或更新 access_record，状态为已入校'],
     ['TC-12', '离校登记', '对已入校访客办理离校', '记录离校时间，禁止重复离校'],
     ['TC-13', '统计报表', '访问首页和统计报表页', '趋势、排行、状态分布等图表均有数据'],
-    ['TC-14', '运行界面采集', '执行自动化演示流程', '形成 19 张代表性运行界面截图'],
-    ['TC-15', 'LaTeX 报告', '执行 xelatex main.tex 两次', '生成 report-latex/main.pdf']
+    ['TC-14', '运行界面截图', '根据核心页面整理运行截图', '形成 19 张代表性运行界面截图'],
+    ['TC-15', '课程报告检查', '检查章节结构、图表引用和运行截图', '报告结构完整，图表和截图能够正常展示']
 ]
 platform_rows = [
     ['数据库', 'MySQL 8', '支持事务、外键、索引、utf8mb4 字符集，适合课程设计展示关系模型。'],
     ['后端', 'Spring Boot 3 + MyBatis Plus + JWT', '便于快速构建 REST API、权限认证、统一返回和数据访问层。'],
     ['前端', 'Vue 3 + Vite + Element Plus + ECharts', '适合构建课程答辩演示页面、表格表单和统计图表。'],
-    ['截图', 'Playwright / 系统 Chrome', '可自动登录系统并截图，保证报告运行界面一致。'],
-    ['报告', 'LaTeX + XeLaTeX', '中文排版稳定，适合插入长表格、SQL 代码和运行截图。']
+    ['运行截图', '浏览器截图工具', '用于采集系统代表性运行界面，展示登录、预约、审批、门岗核验、统计报表等实现效果。'],
+    ['报告撰写', '课程设计报告文档', '用于整理系统定义、需求分析、数据库设计、SQL 查询、测试结果和运行截图。']
 ]
 chapter05 = r'''
 \section{系统实现与测试}
 \subsection{本章概述}
-本章说明系统的开发平台、后端实现、前端实现、数据库实现、自动截图方案和测试结果，并插入代表性运行界面截图。截图由脚本自动生成，能够直接服务于课程设计报告和答辩展示。
+本章说明系统的开发平台、后端实现、前端实现、数据库实现和测试结果，并插入代表性运行界面截图。通过测试用例和界面展示，可以验证系统在登录认证、权限控制、访客预约、审批流转、门岗核验、出入校登记、黑名单管理和统计报表等方面的实现效果。
 
 \subsection{开发平台和工具选择}
 '''
@@ -438,11 +445,11 @@ chapter05 += r'''
 \subsection{数据库实现说明}
 数据库采用 MySQL 8 作为持久化平台，围绕用户权限、访客预约、审批流转、通行凭证、出入校记录、黑名单、通知消息和操作日志等对象建立关系表。核心表均设置主键、必要外键、业务唯一约束、索引、状态字段和时间字段，以保证数据完整性、查询效率和业务流转可追踪性。
 
-\subsection{自动截图说明}
-系统提供自动化截图能力，用于在统一演示数据基础上记录登录、首页驾驶舱、预约申请、审批处理、门岗核验、出入校登记、黑名单管理、统计报表和系统管理等代表性界面。该过程保证报告中的运行截图来自同一套业务数据，便于审查系统功能的完整性和一致性。
+\subsection{运行截图说明}
+本报告选取系统运行过程中的代表性界面作为截图材料，覆盖登录、首页驾驶舱、预约申请、审批处理、门岗核验、出入校登记、黑名单管理、统计报表和系统管理等页面。截图内容与演示数据相对应，能够直观展示系统功能完整性、页面布局和关键业务状态。
 
 \subsection{测试方法}
-测试采用数据库初始化测试、接口启动测试、前端页面测试、角色权限测试、核心流程测试、统计报表测试、自动截图测试和 LaTeX 报告编译测试相结合的方式。重点验证数据结构、业务状态、接口响应、页面展示和报告材料之间是否保持一致。
+测试采用数据库初始化测试、接口启动测试、前端页面测试、角色权限测试、核心流程测试、统计报表测试、运行界面截图检查和报告完整性检查相结合的方式。重点验证数据结构、业务状态、接口响应、页面展示和课程报告材料之间是否保持一致。
 '''
 chapter05 += table('系统测试用例摘要', ['编号', '测试名称', '操作/输入', '预期结果'], test_rows, [0.12, 0.20, 0.34, 0.28])
 chapter05 += r'''
@@ -465,9 +472,9 @@ write(chapters / '05_implementation_testing.tex', chapter05)
 
 chapter06 = r'''
 \section{总结}
-本课程设计围绕“重庆邮电大学智慧访客预约与出入校管理系统”完成了从需求分析、概念结构设计、逻辑结构设计、MySQL 建库建表、后端接口、前端页面、权限控制、核心业务流程、统计报表、自动截图到 LaTeX 报告生成的完整实践。系统以访客预约为主线，将访客信息、预约申请、审批记录、通行凭证、出入校记录、黑名单、用户权限和系统日志统一纳入数据库管理，能够较好地体现数据库系统在校园安全管理场景中的建模、约束、查询和应用价值。
+本课程设计围绕“重庆邮电大学智慧访客预约与出入校管理系统”完成了从需求分析、概念结构设计、逻辑结构设计、MySQL 建库建表、后端接口、前端页面、权限控制、核心业务流程、统计报表、运行界面截图到课程报告撰写的完整实践。系统以访客预约为主线，将访客信息、预约申请、审批记录、通行凭证、出入校记录、黑名单、用户权限和系统日志统一纳入数据库管理，能够较好地体现数据库系统在校园安全管理场景中的建模、约束、查询和应用价值。
 
-在数据库设计方面，系统明确了实体、关系、主键、外键、唯一约束、索引和状态字段，核心表结构能够覆盖从预约提交到访问归档的完整流程。在系统实现方面，后端采用 Spring Boot 3、MyBatis Plus、MySQL 和 JWT，前端采用 Vue 3、Element Plus、Axios、Vue Router 和 ECharts，页面能够展示预约、审批、核验、出入校、黑名单、统计报表和系统管理等核心功能。在自动化方面，项目提供 Playwright 截图脚本和 LaTeX 报告项目，便于将运行界面、SQL、图表和测试说明整合为最终课程设计报告。
+在数据库设计方面，系统明确了实体、关系、主键、外键、唯一约束、索引和状态字段，核心表结构能够覆盖从预约提交到访问归档的完整流程。在系统实现方面，后端采用 Spring Boot 3、MyBatis Plus、MySQL 和 JWT，前端采用 Vue 3、Element Plus、Axios、Vue Router 和 ECharts，页面能够展示预约、审批、核验、出入校、黑名单、统计报表和系统管理等核心功能。在材料整理方面，项目保留了运行界面截图、SQL 示例、设计图和测试说明，便于在课程报告中完整展示系统设计与实现结果。
 
 总体来看，本系统从数据库课程设计要求出发，完成了系统定义、需求分析、数据流程分析、概念结构设计、逻辑结构设计、SQL 详细设计、系统实现和测试验证等环节。设计结果能够覆盖校园访客预约与出入校管理的主要业务场景，报告中的图表、关系模式、SQL 查询和运行界面能够共同说明系统的数据组织方式与实际运行效果。
 '''
@@ -547,7 +554,7 @@ main = r'''
 \input{styles/report-style.tex}
 
 \title{重庆邮电大学智慧访客预约与出入校管理系统\\数据库原理课程设计报告}
-\author{姓名：蔡锦艺\\学号：2024211513\\班级：04892401\\数据库原理期末大作业}
+\author{姓名：蔡锦艺\\学号：2024211513\\班级：04892401\\本数据库系统的设计、实现与课程报告撰写均由本人独立完成\\数据库原理期末大作业}
 \date{\today}
 
 \begin{document}

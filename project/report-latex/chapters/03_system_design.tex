@@ -3,7 +3,7 @@
 系统设计将需求分析结果转换为可实现的数据模型和系统结构。本章包括概念结构设计、E-R 图、逻辑结构设计、关系模式、系统功能模块图和其它设计图，保证概念模型、逻辑结构、系统接口和运行界面之间保持一致。
 
 \subsection{概念结构设计说明}
-概念结构设计阶段从业务流程中抽取实体和联系。核心业务实体包括 visitor、visit\_apply、approval\_record、pass\_code、access\_record、blacklist、campus\_gate 等；权限实体包括 sys\_user、sys\_role、sys\_permission 以及用户角色、角色权限中间表；支撑实体包括 notice、operation\_log、dict\_type、dict\_item、screenshot\_record 和 report\_record。设计时将“访客提交预约”作为主线，确保每个实体都能在核心流程中找到业务来源。
+概念结构设计阶段主要根据访客预约、审批流转、门岗通行和统计查询等业务过程抽取实体与联系。核心业务部分包括访客、预约申请、审批记录、通行凭证、出入校记录、黑名单和校门等实体；权限管理部分包括系统用户、角色、权限及其授权关系；系统支撑部分包括通知消息、操作日志、数据字典、截图记录和材料归档记录等实体。各实体围绕“访客提交预约申请”这一主线展开，能够覆盖从预约提交、审批确认、通行核验到访问归档的完整过程。
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.300\textwidth}>{\raggedright\arraybackslash}p{0.640\textwidth}}
 \caption{主要实体及存在原因}\\
 \toprule
@@ -74,39 +74,24 @@ operation\_log & 保存关键业务操作日志，支撑审计和测试说明。
 \end{figure}
 \subsection{逻辑结构设计说明}
 逻辑结构设计将概念实体转换为 MySQL 关系表。实体表统一使用 \texttt{id} 作为主键，时间字段统一使用 \texttt{create\_time}、\texttt{update\_time}，软删除字段统一使用 \texttt{deleted}。多对多关系通过 sys\_user\_role 和 sys\_role\_permission 中间表表达；一对多关系通过外键字段或业务关联字段表达；预约、审批、通行和出入校状态通过状态字段表达。
-\begin{longtable}{>{\raggedright\arraybackslash}p{0.300\textwidth}>{\raggedright\arraybackslash}p{0.460\textwidth}>{\raggedright\arraybackslash}p{0.180\textwidth}}
-\caption{逻辑表结构摘要}\\
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.140\textwidth}>{\raggedright\arraybackslash}p{0.270\textwidth}>{\raggedright\arraybackslash}p{0.360\textwidth}>{\raggedright\arraybackslash}p{0.170\textwidth}}
+\caption{主要关系表设计摘要}\\
 \toprule
-表名 & 关键字段摘要 & 说明 \\
+设计分组 & 主要关系表 & 设计重点 & 主要约束 \\
 \midrule
-系统用户表 & id BIGINT；username VARCHAR(50)；password\_hash VARCHAR(255)；real\_name VARCHAR(50)；phone VARCHAR(20)；email VARCHAR(100)；department\_id BIGINT；user\_type VARCHAR(30) & 数据库物理表，与关系模式和系统实现对象对应 \\
-角色表 & id BIGINT；role\_code VARCHAR(50)；role\_name VARCHAR(50)；role\_desc VARCHAR(255)；status VARCHAR(30)；create\_time DATETIME；update\_time DATETIME；deleted TINYINT & 数据库物理表，与关系模式和系统实现对象对应 \\
-权限表 & id BIGINT；permission\_code VARCHAR(100)；permission\_name VARCHAR(100)；permission\_type VARCHAR(30)；parent\_id BIGINT；route\_path VARCHAR(200)；component\_path VARCHAR(200)；api\_path VARCHAR(200) & 数据库物理表，与关系模式和系统实现对象对应 \\
-用户角色关联表 & id BIGINT；user\_id BIGINT；role\_id BIGINT；create\_time DATETIME；update\_time DATETIME；deleted TINYINT；PRIMARY KEY；UNIQUE KEY & 数据库物理表，与关系模式和系统实现对象对应 \\
-角色权限关联表 & id BIGINT；role\_id BIGINT；permission\_id BIGINT；create\_time DATETIME；update\_time DATETIME；deleted TINYINT；PRIMARY KEY；UNIQUE KEY & 数据库物理表，与关系模式和系统实现对象对应 \\
-部门表 & id BIGINT；parent\_id BIGINT；dept\_code VARCHAR(50)；dept\_name VARCHAR(100)；leader\_user\_id BIGINT；phone VARCHAR(20)；sort\_order INT；status VARCHAR(30) & 数据库物理表，与关系模式和系统实现对象对应 \\
-校门表 & id BIGINT；gate\_code VARCHAR(50)；gate\_name VARCHAR(100)；gate\_location VARCHAR(200)；gate\_type VARCHAR(30)；status VARCHAR(30)；remark VARCHAR(255)；create\_time DATETIME & 数据库物理表，与关系模式和系统实现对象对应 \\
-访客表 & id BIGINT；visitor\_name VARCHAR(50)；id\_type VARCHAR(30)；id\_number VARCHAR(50)；phone VARCHAR(20)；company VARCHAR(100)；gender VARCHAR(10)；visitor\_level VARCHAR(30) & 数据库物理表，与关系模式和系统实现对象对应 \\
-访客车辆表 & id BIGINT；visitor\_id BIGINT；plate\_no VARCHAR(20)；vehicle\_type VARCHAR(30)；color VARCHAR(30)；brand VARCHAR(50)；status VARCHAR(30)；create\_time DATETIME & 数据库物理表，与关系模式和系统实现对象对应 \\
-随行人员表 & id BIGINT；apply\_id BIGINT；companion\_name VARCHAR(50)；id\_type VARCHAR(30)；id\_number VARCHAR(50)；phone VARCHAR(20)；relation\_remark VARCHAR(100)；create\_time DATETIME & 数据库物理表，与关系模式和系统实现对象对应 \\
-预约申请表 & id BIGINT；apply\_no VARCHAR(50)；visitor\_id BIGINT；host\_user\_id BIGINT；department\_id BIGINT；vehicle\_id BIGINT；visit\_reason VARCHAR(255)；plan\_start\_time DATETIME & 数据库物理表，与关系模式和系统实现对象对应 \\
-审批记录表 & id BIGINT；apply\_id BIGINT；approval\_step VARCHAR(30)；approver\_user\_id BIGINT；approval\_result VARCHAR(30)；approval\_comment VARCHAR(255)；approval\_time DATETIME；sort\_order INT & 数据库物理表，与关系模式和系统实现对象对应 \\
-通行凭证表 & id BIGINT；apply\_id BIGINT；pass\_code VARCHAR(64)；qr\_content VARCHAR(500)；valid\_from DATETIME；valid\_to DATETIME；pass\_status VARCHAR(30)；used\_time DATETIME & 数据库物理表，与关系模式和系统实现对象对应 \\
-出入校记录表 & id BIGINT；apply\_id BIGINT；visitor\_id BIGINT；pass\_code\_id BIGINT；entry\_gate\_id BIGINT；exit\_gate\_id BIGINT；entry\_guard\_id BIGINT；exit\_guard\_id BIGINT & 数据库物理表，与关系模式和系统实现对象对应 \\
-黑名单表 & id BIGINT；visitor\_id BIGINT；id\_number VARCHAR(50)；phone VARCHAR(20)；reason VARCHAR(255)；level VARCHAR(30)；start\_time DATETIME；end\_time DATETIME & 数据库物理表，与关系模式和系统实现对象对应 \\
-通知消息表 & id BIGINT；receiver\_user\_id BIGINT；receiver\_type VARCHAR(30)；title VARCHAR(100)；content VARCHAR(1000)；business\_type VARCHAR(50)；business\_id BIGINT；read\_status VARCHAR(30) & 数据库物理表，与关系模式和系统实现对象对应 \\
-操作日志表 & id BIGINT；operator\_user\_id BIGINT；operator\_name VARCHAR(50)；module\_name VARCHAR(100)；operation\_type VARCHAR(50)；request\_method VARCHAR(10)；request\_url VARCHAR(255)；operation\_result VARCHAR(30) & 数据库物理表，与关系模式和系统实现对象对应 \\
-字典类型表 & id BIGINT；type\_code VARCHAR(50)；type\_name VARCHAR(100)；status VARCHAR(30)；remark VARCHAR(255)；create\_time DATETIME；update\_time DATETIME；deleted TINYINT & 数据库物理表，与关系模式和系统实现对象对应 \\
-字典项表 & id BIGINT；type\_id BIGINT；item\_code VARCHAR(50)；item\_name VARCHAR(100)；item\_value VARCHAR(100)；sort\_order INT；status VARCHAR(30)；remark VARCHAR(255) & 数据库物理表，与关系模式和系统实现对象对应 \\
-截图记录表 & id BIGINT；screenshot\_code VARCHAR(50)；page\_name VARCHAR(100)；route\_path VARCHAR(200)；role\_code VARCHAR(50)；file\_path VARCHAR(255)；description VARCHAR(255)；capture\_time DATETIME & 数据库物理表，与关系模式和系统实现对象对应 \\
-报告记录表 & id BIGINT；report\_code VARCHAR(50)；report\_name VARCHAR(100)；markdown\_path VARCHAR(255)；word\_path VARCHAR(255)；generate\_status VARCHAR(30)；generate\_time DATETIME；generated\_by BIGINT & 数据库物理表，与关系模式和系统实现对象对应 \\
+权限与组织 & 系统用户表、角色表、权限表、用户角色关联表、角色权限关联表、部门表 & 管理登录用户、部门归属、角色授权和菜单接口权限，是系统访问控制的基础。 & 用户与角色、角色与权限均采用中间表表示多对多关系。 \\
+访客基础 & 访客表、访客车辆表、随行人员表、黑名单表 & 保存访客身份、车辆、同行人员和风险名单，为预约申请和门岗核验提供基础数据。 & 访客身份、手机号、车辆和黑名单信息参与预约与核验约束。 \\
+预约审批 & 预约申请表、审批记录表、通行凭证表 & 保存从提交申请、被访人确认、部门审批到生成通行凭证的核心业务链路。 & 预约编号唯一，审批记录按环节和时间形成完整处理轨迹。 \\
+出入校管理 & 出入校记录表、校门表 & 记录门岗核验、入校登记、离校登记、当前在校和超时未离校等访问状态。 & 出入校记录关联预约、访客、通行凭证、校门和安保人员。 \\
+消息与日志 & 通知消息表、操作日志表 & 保存预约提醒、审批提醒、风险提醒和关键操作审计记录。 & 通知关联接收人和业务对象，日志记录操作人、模块和处理结果。 \\
+字典与材料 & 字典类型表、字典项表、截图记录表、报告记录表 & 维护状态、类型等基础字典，并保存课程展示材料的整理记录。 & 字典项归属于字典类型，材料记录保存编号、路径、状态和时间。 \\
 \bottomrule
 \end{longtable}
 \subsection{关系模式说明}
-系统关系模式与 MySQL 表结构一一对应。核心关系模式包括 visitor(id, visitor\_name, phone, id\_number, ...)、visit\_apply(id, apply\_no, visitor\_id, host\_user\_id, department\_id, apply\_status, access\_status, ...)、approval\_record(id, apply\_id, approval\_step, approval\_result, ...)、pass\_code(id, apply\_id, code, valid\_from, valid\_to, status, ...)、access\_record(id, apply\_id, visitor\_id, entry\_gate\_id, exit\_gate\_id, access\_status, ...)。这些关系模式既能表达实体属性，也能表达核心业务联系。
+系统关系模式由概念结构转换得到，重点保持实体、联系和业务约束之间的一致性。访客表保存校外人员身份基础信息；预约申请表保存一次访问申请，并关联访客、被访人、部门、车辆和访问时间；审批记录表保存被访人确认、部门审批等环节的处理结果；通行凭证表保存审批通过后的校验凭证和有效期；出入校记录表保存门岗核验后的入校、离校和异常状态；黑名单表用于记录限制入校或需要重点关注的风险人员。用户、角色和权限之间的多对多关系通过中间表表达，既保证权限控制清晰，也避免在单个实体中重复保存授权信息。
 
 \subsection{系统功能模块图}
-系统功能模块图按角色和业务域划分为访客端、被访人端、审批管理、门岗管理、访客记录、安全管理、统计报表、系统管理和自动化支撑等模块。
+系统功能模块图按角色和业务域划分为访客端、被访人端、审批管理、门岗管理、访客记录、安全管理、统计报表、系统管理和系统支撑等模块。
 \subsubsection{系统功能模块图}
 
 模块图展示系统功能分解及各模块边界，便于说明前端菜单、后端接口和权限控制的对应关系。
@@ -145,7 +130,7 @@ operation\_log & 保存关键业务操作日志，支撑审计和测试说明。
 
 \end{figure}\subsubsection{系统架构图}
 
-系统架构图展示浏览器前端、Spring Boot 后端、MySQL 数据库、Playwright 截图脚本和 LaTeX 报告生成脚本之间的关系。
+系统架构图展示浏览器前端、Spring Boot 后端、MySQL 数据库、运行界面截图和课程设计材料之间的关系。
 
 \begin{figure}[H]
 
@@ -166,17 +151,5 @@ operation\_log & 保存关键业务操作日志，支撑审计和测试说明。
   \includegraphics[width=0.94\textwidth]{figures/table_relation.png}
 
   \caption{数据库表关系图}
-
-\end{figure}\subsubsection{自动截图与报告生成流程图}
-
-自动化支撑流程图展示演示数据、页面截图和报告生成之间的衔接关系，说明系统如何形成可复核的课程设计材料。
-
-\begin{figure}[H]
-
-  \centering
-
-  \includegraphics[width=0.94\textwidth]{figures/automation_report_workflow.png}
-
-  \caption{自动截图与报告生成流程图}
 
 \end{figure}
