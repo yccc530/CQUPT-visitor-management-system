@@ -12,6 +12,7 @@ import edu.cqupt.visitor.dto.workflow.VisitApplyUpdateRequest;
 import edu.cqupt.visitor.entity.AccessRecord;
 import edu.cqupt.visitor.entity.PassCode;
 import edu.cqupt.visitor.entity.VisitApply;
+import edu.cqupt.visitor.service.IntegrationViewService;
 import edu.cqupt.visitor.service.VisitorWorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,11 +34,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class VisitorWorkflowController {
 
     private final VisitorWorkflowService visitorWorkflowService;
+    private final IntegrationViewService integrationViewService;
 
     @Operation(summary = "提交访客预约申请")
     @PostMapping("/visit-applies")
     public ApiResponse<VisitApply> submitApplication(@Valid @RequestBody VisitApplySubmitRequest request) {
-        return ApiResponse.ok("预约申请已提交，等待被访人确认", visitorWorkflowService.submitApplication(request));
+        return ApiResponse.ok("预约申请已提交，等待被访人确认", integrationViewService.enrichVisitApply(visitorWorkflowService.submitApplication(request)));
     }
 
     @Operation(summary = "查询我的预约")
@@ -46,69 +48,69 @@ public class VisitorWorkflowController {
                                                         @RequestParam(defaultValue = "10") long size,
                                                         @RequestParam(required = false) String phone,
                                                         @RequestParam(required = false) String idNumber) {
-        return ApiResponse.ok(visitorWorkflowService.myApplications(current, size, phone, idNumber));
+        return ApiResponse.ok(integrationViewService.enrichVisitApplyPage(visitorWorkflowService.myApplications(current, size, phone, idNumber)));
     }
 
     @Operation(summary = "查询预约详情")
     @GetMapping("/visit-applies/{id}")
     public ApiResponse<VisitApply> detail(@PathVariable Long id) {
-        return ApiResponse.ok(visitorWorkflowService.detail(id));
+        return ApiResponse.ok(integrationViewService.enrichVisitApply(visitorWorkflowService.detail(id)));
     }
 
     @Operation(summary = "修改未审批预约")
     @PutMapping("/visit-applies/{id}")
     public ApiResponse<VisitApply> updateUnapproved(@PathVariable Long id,
                                                     @Valid @RequestBody VisitApplyUpdateRequest request) {
-        return ApiResponse.ok("未审批预约已修改", visitorWorkflowService.updateUnapproved(id, request));
+        return ApiResponse.ok("未审批预约已修改", integrationViewService.enrichVisitApply(visitorWorkflowService.updateUnapproved(id, request)));
     }
 
     @Operation(summary = "取消未审批预约")
     @PostMapping("/visit-applies/{id}/cancel")
     public ApiResponse<VisitApply> cancelUnapproved(@PathVariable Long id,
                                                     @RequestParam(required = false) String reason) {
-        return ApiResponse.ok("预约已取消", visitorWorkflowService.cancelUnapproved(id, reason));
+        return ApiResponse.ok("预约已取消", integrationViewService.enrichVisitApply(visitorWorkflowService.cancelUnapproved(id, reason)));
     }
 
     @Operation(summary = "查询被访人待确认预约")
     @GetMapping("/host/pending")
     public ApiResponse<Page<VisitApply>> pendingHostApplications(@RequestParam(defaultValue = "1") long current,
                                                                  @RequestParam(defaultValue = "10") long size) {
-        return ApiResponse.ok(visitorWorkflowService.pendingHostApplications(current, size));
+        return ApiResponse.ok(integrationViewService.enrichVisitApplyPage(visitorWorkflowService.pendingHostApplications(current, size)));
     }
 
     @Operation(summary = "被访人确认预约")
     @PostMapping("/host/{id}/confirm")
     public ApiResponse<VisitApply> hostConfirm(@PathVariable Long id,
                                                @RequestBody(required = false) ApprovalDecisionRequest request) {
-        return ApiResponse.ok("被访人已确认，等待部门审批", visitorWorkflowService.hostConfirm(id, request));
+        return ApiResponse.ok("被访人已确认，等待部门审批", integrationViewService.enrichVisitApply(visitorWorkflowService.hostConfirm(id, request)));
     }
 
     @Operation(summary = "被访人拒绝预约")
     @PostMapping("/host/{id}/reject")
     public ApiResponse<VisitApply> hostReject(@PathVariable Long id,
                                               @RequestBody(required = false) ApprovalDecisionRequest request) {
-        return ApiResponse.ok("被访人已拒绝预约", visitorWorkflowService.hostReject(id, request));
+        return ApiResponse.ok("被访人已拒绝预约", integrationViewService.enrichVisitApply(visitorWorkflowService.hostReject(id, request)));
     }
 
     @Operation(summary = "查询部门待审批预约")
     @GetMapping("/department/pending")
     public ApiResponse<Page<VisitApply>> pendingDepartmentApplications(@RequestParam(defaultValue = "1") long current,
                                                                        @RequestParam(defaultValue = "10") long size) {
-        return ApiResponse.ok(visitorWorkflowService.pendingDepartmentApplications(current, size));
+        return ApiResponse.ok(integrationViewService.enrichVisitApplyPage(visitorWorkflowService.pendingDepartmentApplications(current, size)));
     }
 
     @Operation(summary = "部门审批通过")
     @PostMapping("/department/{id}/approve")
     public ApiResponse<VisitApply> departmentApprove(@PathVariable Long id,
                                                      @RequestBody(required = false) ApprovalDecisionRequest request) {
-        return ApiResponse.ok("部门审批通过，通行凭证已生成", visitorWorkflowService.departmentApprove(id, request));
+        return ApiResponse.ok("部门审批通过，通行凭证已生成", integrationViewService.enrichVisitApply(visitorWorkflowService.departmentApprove(id, request)));
     }
 
     @Operation(summary = "部门审批拒绝")
     @PostMapping("/department/{id}/reject")
     public ApiResponse<VisitApply> departmentReject(@PathVariable Long id,
                                                     @RequestBody(required = false) ApprovalDecisionRequest request) {
-        return ApiResponse.ok("部门审批已拒绝", visitorWorkflowService.departmentReject(id, request));
+        return ApiResponse.ok("部门审批已拒绝", integrationViewService.enrichVisitApply(visitorWorkflowService.departmentReject(id, request)));
     }
 
     @Operation(summary = "查询通行凭证")
@@ -127,13 +129,13 @@ public class VisitorWorkflowController {
     @Operation(summary = "入校登记")
     @PostMapping("/access/entry")
     public ApiResponse<AccessRecord> registerEntry(@Valid @RequestBody EntryRegisterRequest request) {
-        return ApiResponse.ok("入校登记成功", visitorWorkflowService.registerEntry(request));
+        return ApiResponse.ok("入校登记成功", integrationViewService.enrichAccessRecord(visitorWorkflowService.registerEntry(request)));
     }
 
     @Operation(summary = "离校登记")
     @PostMapping("/access/exit")
     public ApiResponse<AccessRecord> registerExit(@Valid @RequestBody ExitRegisterRequest request) {
-        return ApiResponse.ok("离校登记成功", visitorWorkflowService.registerExit(request));
+        return ApiResponse.ok("离校登记成功", integrationViewService.enrichAccessRecord(visitorWorkflowService.registerExit(request)));
     }
 
     @Operation(summary = "查询超时未离校访客")
@@ -141,6 +143,6 @@ public class VisitorWorkflowController {
     public ApiResponse<Page<AccessRecord>> overdueVisitors(@RequestParam(defaultValue = "1") long current,
                                                            @RequestParam(defaultValue = "10") long size,
                                                            @RequestParam(defaultValue = "false") boolean mark) {
-        return ApiResponse.ok(visitorWorkflowService.overdueVisitors(current, size, mark));
+        return ApiResponse.ok(integrationViewService.enrichAccessRecordPage(visitorWorkflowService.overdueVisitors(current, size, mark)));
     }
 }

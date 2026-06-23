@@ -1,0 +1,69 @@
+flowchart LR
+  Visitor[访客]
+  Host[被访人]
+  Approver[部门审批人员]
+  Guard[门岗安保人员]
+  Admin[系统管理员]
+  Manager[校级管理人员]
+
+  subgraph System[重庆邮电大学智慧访客预约与出入校管理系统]
+    UC01([登录系统])
+    UC02([提交预约申请])
+    UC03([查看我的预约])
+    UC04([修改或取消未审批预约])
+    UC05([查看通行凭证])
+    UC06([确认预约])
+    UC07([拒绝预约])
+    UC08([部门审批通过])
+    UC09([部门审批拒绝])
+    UC10([门岗核验])
+    UC11([入校登记])
+    UC12([离校登记])
+    UC13([查看当前在校访客])
+    UC14([处理超时未离校])
+    UC15([黑名单管理])
+    UC16([访客记录查询])
+    UC17([统计报表查看])
+    UC18([用户角色权限管理])
+    UC19([部门与校门管理])
+    UC20([系统日志查看])
+    UC21([截图与报告记录维护])
+  end
+
+  Visitor --> UC01
+  Visitor --> UC02
+  Visitor --> UC03
+  Visitor --> UC04
+  Visitor --> UC05
+
+  Host --> UC01
+  Host --> UC06
+  Host --> UC07
+  Host --> UC16
+
+  Approver --> UC01
+  Approver --> UC08
+  Approver --> UC09
+  Approver --> UC16
+  Approver --> UC17
+
+  Guard --> UC01
+  Guard --> UC10
+  Guard --> UC11
+  Guard --> UC12
+  Guard --> UC13
+  Guard --> UC14
+
+  Admin --> UC01
+  Admin --> UC15
+  Admin --> UC18
+  Admin --> UC19
+  Admin --> UC20
+  Admin --> UC21
+  Admin --> UC17
+
+  Manager --> UC01
+  Manager --> UC13
+  Manager --> UC14
+  Manager --> UC16
+  Manager --> UC17

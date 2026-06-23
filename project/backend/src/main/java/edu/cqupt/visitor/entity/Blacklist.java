@@ -66,4 +66,12 @@ public class Blacklist {
     @TableField("deleted")
     @Schema(description = "软删除标记")
     private Integer deleted;
+
+    @TableField(exist = false)
+    @Schema(description = "访客姓名")
+    private String visitorName;
+
+    @TableField(exist = false)
+    @Schema(description = "操作人姓名")
+    private String operatorName;
 }

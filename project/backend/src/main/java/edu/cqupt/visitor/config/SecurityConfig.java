@@ -62,6 +62,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/workflow/access/overtime")
                         .hasAnyRole("ADMIN", "GATE_GUARD", "SCHOOL_MANAGER")
 
+                        .requestMatchers(HttpMethod.GET, "/api/statistics/**")
+                        .authenticated()
+
                         .requestMatchers("/api/sys-users/**", "/api/sys-roles/**", "/api/sys-permissions/**",
                                 "/api/sys-user-roles/**", "/api/sys-role-permissions/**",
                                 "/api/departments/**", "/api/campus-gates/**", "/api/dict-types/**",

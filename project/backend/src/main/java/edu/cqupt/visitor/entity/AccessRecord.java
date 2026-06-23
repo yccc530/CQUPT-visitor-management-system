@@ -78,4 +78,36 @@ public class AccessRecord {
     @TableField("deleted")
     @Schema(description = "软删除标记")
     private Integer deleted;
+
+    @TableField(exist = false)
+    @Schema(description = "预约编号")
+    private String applyNo;
+
+    @TableField(exist = false)
+    @Schema(description = "访客姓名")
+    private String visitorName;
+
+    @TableField(exist = false)
+    @Schema(description = "访客手机号")
+    private String phone;
+
+    @TableField(exist = false)
+    @Schema(description = "入校校门名称")
+    private String entryGateName;
+
+    @TableField(exist = false)
+    @Schema(description = "离校校门名称")
+    private String exitGateName;
+
+    @TableField(exist = false)
+    @Schema(description = "入校安保人员姓名")
+    private String entryGuardName;
+
+    @TableField(exist = false)
+    @Schema(description = "离校安保人员姓名")
+    private String exitGuardName;
+
+    @TableField(exist = false)
+    @Schema(description = "通行码")
+    private String passCode;
 }

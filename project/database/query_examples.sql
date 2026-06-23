@@ -61,7 +61,7 @@ JOIN visitor v ON va.visitor_id = v.id
 JOIN sys_user u ON va.host_user_id = u.id
 JOIN department d ON va.department_id = d.id
 WHERE va.department_id = @department_id
-  AND va.apply_status = 'PENDING_DEPT'
+  AND va.apply_status IN ('HOST_CONFIRMED', 'PENDING_DEPT')
   AND va.deleted = 0
 ORDER BY va.submit_time ASC;
 

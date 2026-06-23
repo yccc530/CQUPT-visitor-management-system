@@ -1,0 +1,57 @@
+flowchart TB
+  subgraph Client[前端访问层]
+    Browser[浏览器]
+    Vue[Vue 3 + Vite]
+    Element[Element Plus + ECharts]
+  end
+
+  subgraph Frontend[前端工程层]
+    Router[Vue Router 路由控制]
+    Axios[Axios 请求拦截器]
+    Token[Token 本地存储]
+    Pages[业务页面组件]
+  end
+
+  subgraph Backend[后端服务层]
+    Controller[Spring Boot Controller]
+    Security[Spring Security + JWT]
+    Service[业务 Service]
+    Workflow[访客流程服务]
+    Mapper[MyBatis Plus Mapper]
+    Swagger[Swagger 接口文档]
+  end
+
+  subgraph Data[数据持久层]
+    MySQL[(MySQL 8 数据库)]
+    Tables[21 张业务数据表]
+  end
+
+  subgraph Automation[自动化支撑层]
+    Playwright[Playwright 自动截图]
+    Manifest[screenshots/manifest.json]
+    ReportScript[generate_report.py]
+    Markdown[Markdown 课程设计报告]
+    Word[Word 文档导出]
+  end
+
+  Browser --> Vue
+  Vue --> Element
+  Vue --> Router
+  Router --> Pages
+  Pages --> Axios
+  Axios --> Token
+  Axios -->|/api| Controller
+  Controller --> Security
+  Security --> Service
+  Service --> Workflow
+  Service --> Mapper
+  Mapper --> MySQL
+  MySQL --> Tables
+  Controller --> Swagger
+
+  Playwright --> Browser
+  Playwright --> Manifest
+  Manifest --> ReportScript
+  MySQL --> ReportScript
+  ReportScript --> Markdown
+  ReportScript --> Word

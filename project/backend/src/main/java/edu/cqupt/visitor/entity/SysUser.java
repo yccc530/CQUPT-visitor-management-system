@@ -66,4 +66,8 @@ public class SysUser {
     @TableField("deleted")
     @Schema(description = "软删除标记")
     private Integer deleted;
+
+    @TableField(exist = false)
+    @Schema(description = "部门名称")
+    private String departmentName;
 }

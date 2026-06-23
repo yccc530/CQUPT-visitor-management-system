@@ -90,4 +90,28 @@ public class VisitApply {
     @TableField("deleted")
     @Schema(description = "软删除标记")
     private Integer deleted;
+
+    @TableField(exist = false)
+    @Schema(description = "访客姓名")
+    private String visitorName;
+
+    @TableField(exist = false)
+    @Schema(description = "访客手机号")
+    private String phone;
+
+    @TableField(exist = false)
+    @Schema(description = "访客证件号")
+    private String idNumber;
+
+    @TableField(exist = false)
+    @Schema(description = "被访人姓名")
+    private String hostName;
+
+    @TableField(exist = false)
+    @Schema(description = "访问部门名称")
+    private String departmentName;
+
+    @TableField(exist = false)
+    @Schema(description = "访客车牌号")
+    private String vehiclePlateNo;
 }

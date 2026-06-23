@@ -10,6 +10,6 @@ const columns = [
   { prop: 'entryTime', label: '入校时间', width: 170 }, { prop: 'accessStatus', label: '访问状态', statusKind: 'access' }
 ]
 const filters = [{ prop: 'visitorName', label: '访客姓名' }, { prop: 'applyNo', label: '预约编号' }]
-const api = { list: async (params) => { const page = await accessRecordApi.list(params); page.records = (page.records || []).filter((i) => i.accessStatus === 'ENTERED'); return page } }
+const api = { list: (params) => accessRecordApi.list({ ...params, accessStatus: 'ENTERED' }) }
 const mockData = mockAccessRecords.filter((i) => i.accessStatus === 'ENTERED')
 </script>

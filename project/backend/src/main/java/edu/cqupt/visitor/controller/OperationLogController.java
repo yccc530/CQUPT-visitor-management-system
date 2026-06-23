@@ -1,5 +1,6 @@
 package edu.cqupt.visitor.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import edu.cqupt.visitor.common.ApiResponse;
 import edu.cqupt.visitor.entity.OperationLog;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,16 +32,34 @@ public class OperationLogController {
     @Operation(summary = "分页查询操作日志")
     @GetMapping
     public ApiResponse<Page<OperationLog>> list(@RequestParam(defaultValue = "1") long current,
-                                          @RequestParam(defaultValue = "10") long size) {
-        return ApiResponse.ok(operationLogService.page(new Page<>(current, size)));
+                                                @RequestParam(defaultValue = "10") long size,
+                                                @RequestParam(required = false) String operatorName,
+                                                @RequestParam(required = false) String moduleName,
+                                                @RequestParam(required = false) String operationType,
+                                                @RequestParam(required = false) String operationResult) {
+        LambdaQueryWrapper<OperationLog> wrapper = new LambdaQueryWrapper<OperationLog>().eq(OperationLog::getDeleted, 0);
+        if (StringUtils.hasText(operatorName)) {
+            wrapper.like(OperationLog::getOperatorName, operatorName);
+        }
+        if (StringUtils.hasText(moduleName)) {
+            wrapper.like(OperationLog::getModuleName, moduleName);
+        }
+        if (StringUtils.hasText(operationType)) {
+            wrapper.like(OperationLog::getOperationType, operationType);
+        }
+        if (StringUtils.hasText(operationResult)) {
+            wrapper.eq(OperationLog::getOperationResult, operationResult);
+        }
+        wrapper.orderByDesc(OperationLog::getOperationTime).orderByDesc(OperationLog::getCreateTime);
+        return ApiResponse.ok(operationLogService.page(new Page<>(current, size), wrapper));
     }
 
-    @Operation(summary = "查询")
+    @Operation(summary = "查询操作日志详情")
     @GetMapping("/{id}")
     public ApiResponse<OperationLog> detail(@PathVariable Long id) {
         OperationLog entity = operationLogService.getById(id);
         if (entity == null) {
-            throw new BusinessException(404, "");
+            throw new BusinessException(404, "操作日志不存在");
         }
         return ApiResponse.ok(entity);
     }

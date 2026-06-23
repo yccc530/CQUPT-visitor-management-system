@@ -1,0 +1,31 @@
+flowchart TD
+  Start([执行 scripts/run_all.sh])
+  InitDB[初始化 MySQL 数据库]
+  StartBackend[启动 Spring Boot 后端]
+  StartFrontend[启动 Vue 前端]
+  Login[Playwright 使用测试账号登录]
+  VisitPages[访问登录页、驾驶舱、预约、审批、核验、报表等核心页面]
+  Capture[保存截图到 screenshots/]
+  Manifest[生成 screenshots/manifest.json]
+  ReadDocs[读取 docs/report_parts 与 docs/diagrams.md]
+  ReadSQL[读取 database/schema.sql 与 query_examples.sql]
+  ReadScreenshots[读取截图清单和图片路径]
+  GenerateMD[生成 Markdown 课程设计报告]
+  ExportWord[使用 python-docx 或 Pandoc 导出 Word]
+  Record[写入 screenshot_record 与 report_record]
+  End([形成可提交材料])
+
+  Start --> InitDB
+  InitDB --> StartBackend
+  StartBackend --> StartFrontend
+  StartFrontend --> Login
+  Login --> VisitPages
+  VisitPages --> Capture
+  Capture --> Manifest
+  Manifest --> ReadScreenshots
+  ReadDocs --> GenerateMD
+  ReadSQL --> GenerateMD
+  ReadScreenshots --> GenerateMD
+  GenerateMD --> ExportWord
+  ExportWord --> Record
+  Record --> End

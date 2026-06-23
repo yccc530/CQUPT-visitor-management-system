@@ -1,0 +1,36 @@
+flowchart TD
+  Start([访客提交预约申请])
+  SaveVisitor[保存或更新访客信息]
+  CheckBlacklist{手机号或证件号是否命中黑名单}
+  RejectBlacklist[标记 REJECTED_BLACKLIST 并写入操作日志]
+  PendingHost[预约状态：PENDING_HOST 待被访人确认]
+  HostDecision{被访人处理}
+  HostReject[状态：HOST_REJECTED]
+  HostConfirm[状态：HOST_CONFIRMED]
+  DeptQueue[进入部门审批队列]
+  DeptDecision{部门审批}
+  DeptReject[状态：REJECTED]
+  Approved[状态：APPROVED]
+  GeneratePass[生成 pass_code 通行凭证]
+  NotifyVisitor[通知访客查看通行码]
+  Archive[审批记录和操作日志归档]
+  End([进入门岗核验环节])
+
+  Start --> SaveVisitor
+  SaveVisitor --> CheckBlacklist
+  CheckBlacklist -->|是| RejectBlacklist
+  RejectBlacklist --> Archive
+  CheckBlacklist -->|否| PendingHost
+  PendingHost --> HostDecision
+  HostDecision -->|拒绝| HostReject
+  HostDecision -->|确认| HostConfirm
+  HostConfirm --> DeptQueue
+  DeptQueue --> DeptDecision
+  DeptDecision -->|拒绝| DeptReject
+  DeptDecision -->|通过| Approved
+  Approved --> GeneratePass
+  GeneratePass --> NotifyVisitor
+  HostReject --> Archive
+  DeptReject --> Archive
+  NotifyVisitor --> Archive
+  Archive --> End

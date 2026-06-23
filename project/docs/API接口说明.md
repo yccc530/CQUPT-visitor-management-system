@@ -313,3 +313,19 @@ Authorization: Bearer <token>
 ```
 
 入校成功后写入 `access_record.entry_time`，预约访问状态更新为 `ENTERED`。离校成功后写入 `access_record.exit_time`，预约访问状态更新为 `EXITED`。若重复离校，接口返回错误：`该访客已登记离校，不能重复离校`。
+## 阶段 14 联调补充接口
+
+### 统计报表接口
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/statistics/dashboard` | 返回驾驶舱、趋势、部门排行、校门统计和审批通过率综合数据。 |
+| GET | `/api/statistics/overview` | 返回今日访客、当前在校、超时未离校、待处理审批等概览指标。 |
+| GET | `/api/statistics/trend?days=7` | 返回近 N 天访客趋势。 |
+| GET | `/api/statistics/department-rank` | 返回本月部门访客排行。 |
+| GET | `/api/statistics/gate-summary` | 返回本月各校门入校和离校统计。 |
+| GET | `/api/statistics/approval-rate` | 返回部门审批通过、拒绝和待处理数据。 |
+
+### 列表展示字段补充
+
+预约、出入校记录、黑名单和用户列表接口在保持原实体字段的基础上，补充返回前端展示字段，例如 `visitorName`、`phone`、`departmentName`、`entryGateName`、`exitGateName`、`operatorName`、`departmentName` 等。这些字段由后端根据外键查询补全，不在数据库业务表中冗余存储。

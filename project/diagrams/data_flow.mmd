@@ -1,52 +1,71 @@
-flowchart TB
-  subgraph TOP[顶层数据流程]
-    Visitor[访客] -->|预约申请信息| System((智慧访客预约与出入校管理系统))
-    Host[被访人] -->|确认结果| System
-    Approver[部门审批人员] -->|审批意见| System
-    Guard[门岗安保人员] -->|核验与登记| System
-    Admin[系统管理员] -->|基础数据与权限配置| System
-    Manager[校级管理人员] -->|统计查询条件| System
-    System -->|预约状态与通行凭证| Visitor
-    System -->|统计报表| Manager
-    System <--> UserStore[(用户角色权限库)]
-    System <--> VisitStore[(访客与预约库)]
-    System <--> ApprovalStore[(审批与通行库)]
-    System <--> AccessStore[(出入校记录库)]
-    System <--> RiskStore[(黑名单与日志库)]
+flowchart LR
+  Visitor[外部实体：访客]
+  Host[外部实体：被访人]
+  Approver[外部实体：部门审批人员]
+  Guard[外部实体：门岗安保人员]
+  Manager[外部实体：校级管理人员]
+  Admin[外部实体：系统管理员]
+
+  subgraph P[处理过程]
+    P1[1. 预约申请受理]
+    P2[2. 黑名单检查]
+    P3[3. 被访人确认]
+    P4[4. 部门审批]
+    P5[5. 通行凭证生成]
+    P6[6. 门岗核验]
+    P7[7. 入校登记]
+    P8[8. 离校登记]
+    P9[9. 查询统计与报表]
+    P10[10. 系统基础维护]
   end
 
-  subgraph APPLY[访客预约数据流程]
-    A1[填写预约信息] --> A2((黑名单检查))
-    A2 -->|未命中| A3((保存预约申请))
-    A2 -->|命中| A4[限制入校提示]
-    A3 --> VisitorStore[(访客信息)]
-    A3 --> ApplyStore[(预约申请信息)]
-    A3 --> NoticeStore[(通知消息)]
+  subgraph D[数据存储]
+    D1[(visitor 访客信息)]
+    D2[(visit_apply 预约申请)]
+    D3[(blacklist 黑名单)]
+    D4[(approval_record 审批记录)]
+    D5[(pass_code 通行凭证)]
+    D6[(access_record 出入校记录)]
+    D7[(sys_user/sys_role/sys_permission 用户权限)]
+    D8[(department/campus_gate 部门校门)]
+    D9[(operation_log 操作日志)]
+    D10[(screenshot_record/report_record 截图报告)]
   end
 
-  subgraph APPROVAL[审批数据流程]
-    B1((被访人确认)) --> B2[(审批记录)]
-    B1 -->|确认通过| B3((部门审批))
-    B1 -->|拒绝| ApplyStore
-    B3 --> B2
-    B3 -->|审批通过| B4((生成通行凭证))
-    B3 -->|审批拒绝| ApplyStore
-    B4 --> PassStore[(通行凭证)]
-  end
-
-  subgraph GATE[门岗核验数据流程]
-    C1[扫描通行码] --> C2((通行凭证核验))
-    C2 --> PassStore
-    C2 --> ApplyStore
-    C2 --> BlackStore[(黑名单信息)]
-    C2 -->|通过| C3[允许入校登记]
-    C2 -->|失败| C4[返回失败原因]
-  end
-
-  subgraph ACCESS[出入校登记数据流程]
-    D1((入校登记)) --> AccessRecord[(出入校记录)]
-    D2((离校登记)) --> AccessRecord
-    D3((超时未离校检查)) --> AccessRecord
-    D3 --> ApplyStore
-    AccessRecord --> D4[当前在校与超时列表]
-  end
+  Visitor -->|访客身份、来访事由、访问时间| P1
+  P1 -->|写入或更新访客资料| D1
+  P1 -->|生成预约申请| D2
+  P1 --> P2
+  P2 -->|读取黑名单规则| D3
+  P2 -->|风险状态或拦截结果| D2
+  P2 -->|待确认预约| P3
+  Host -->|确认或拒绝意见| P3
+  P3 -->|确认记录| D4
+  P3 -->|更新预约状态| D2
+  P3 -->|待部门审批申请| P4
+  Approver -->|审批意见| P4
+  P4 -->|审批记录| D4
+  P4 -->|通过或拒绝状态| D2
+  P4 -->|审批通过申请| P5
+  P5 -->|生成二维码和有效期| D5
+  Guard -->|预约编号、手机号、证件号或通行码| P6
+  P6 -->|读取预约状态| D2
+  P6 -->|读取通行凭证| D5
+  P6 -->|读取黑名单| D3
+  P6 -->|核验通过| P7
+  P7 -->|入校时间、校门、安保人员| D6
+  P7 -->|访问状态已入校| D2
+  Guard -->|离校确认| P8
+  P8 -->|离校时间、校门、安保人员| D6
+  P8 -->|访问状态已离校或超时| D2
+  Manager -->|统计条件| P9
+  Admin -->|统计条件| P9
+  P9 -->|读取业务数据| D1
+  P9 -->|读取预约数据| D2
+  P9 -->|读取通行数据| D6
+  P9 -->|输出报表、趋势、排行| Manager
+  Admin -->|用户、角色、部门、校门、字典维护| P10
+  P10 --> D7
+  P10 --> D8
+  P10 --> D9
+  P9 --> D10

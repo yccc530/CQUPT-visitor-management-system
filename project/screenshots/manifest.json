@@ -1,0 +1,211 @@
+[
+  {
+    "screenshotCode": "01_login",
+    "pageName": "登录页",
+    "routePath": "/login",
+    "roleCode": "ANONYMOUS",
+    "filePath": "screenshots/01_login.png",
+    "description": "展示系统标题、登录表单和测试账号入口。",
+    "reportSection": "系统实现与测试",
+    "captureTime": "2026-06-22T16:44:23.632Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "02_dashboard",
+    "pageName": "首页统计驾驶舱",
+    "routePath": "/dashboard",
+    "roleCode": "ADMIN",
+    "filePath": "screenshots/02_dashboard.png",
+    "description": "展示今日访客、当前在校、超时未离校、审批待处理和统计图表。",
+    "reportSection": "主界面截图",
+    "captureTime": "2026-06-22T16:44:27.421Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "03_visitor_apply",
+    "pageName": "访客预约申请页",
+    "routePath": "/visit/apply",
+    "roleCode": "VISITOR",
+    "filePath": "screenshots/03_visitor_apply.png",
+    "description": "展示访客预约申请表单。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:30.651Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "04_my_apply",
+    "pageName": "我的预约页",
+    "routePath": "/visit/mine",
+    "roleCode": "VISITOR",
+    "filePath": "screenshots/04_my_apply.png",
+    "description": "展示访客本人预约记录和状态。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:32.151Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "05_host_confirm",
+    "pageName": "待确认预约页",
+    "routePath": "/approval/host",
+    "roleCode": "HOST",
+    "filePath": "screenshots/05_host_confirm.png",
+    "description": "展示被访人待确认预约列表。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:35.444Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "06_department_approval",
+    "pageName": "部门审批页",
+    "routePath": "/approval/department",
+    "roleCode": "APPROVER",
+    "filePath": "screenshots/06_department_approval.png",
+    "description": "展示部门审批人员处理预约申请。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:38.757Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "07_gate_check",
+    "pageName": "门岗核验页",
+    "routePath": "/gate/verify",
+    "roleCode": "GUARD",
+    "filePath": "screenshots/07_gate_check.png",
+    "description": "展示通行码、预约编号、手机号或证件号核验界面。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:41.956Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "08_enter_register",
+    "pageName": "入校登记页",
+    "routePath": "/access/entry",
+    "roleCode": "GUARD",
+    "filePath": "screenshots/08_enter_register.png",
+    "description": "展示门岗入校登记页面。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:43.372Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "09_leave_register",
+    "pageName": "离校登记页",
+    "routePath": "/access/exit",
+    "roleCode": "GUARD",
+    "filePath": "screenshots/09_leave_register.png",
+    "description": "展示门岗离校登记页面。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:44.810Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "10_current_visitor",
+    "pageName": "当前在校访客页",
+    "routePath": "/access/current",
+    "roleCode": "GUARD",
+    "filePath": "screenshots/10_current_visitor.png",
+    "description": "展示当前已入校未离校访客。",
+    "reportSection": "查询页截图",
+    "captureTime": "2026-06-22T16:44:46.286Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "11_overtime_visitor",
+    "pageName": "超时未离校访客页",
+    "routePath": "/access/overtime",
+    "roleCode": "GUARD",
+    "filePath": "screenshots/11_overtime_visitor.png",
+    "description": "展示超过计划离校时间仍未离校访客。",
+    "reportSection": "查询页截图",
+    "captureTime": "2026-06-22T16:44:47.752Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "12_blacklist",
+    "pageName": "黑名单管理页",
+    "routePath": "/security/blacklist",
+    "roleCode": "ADMIN",
+    "filePath": "screenshots/12_blacklist.png",
+    "description": "展示黑名单管理与风险访客记录。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:49.286Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "13_visit_record",
+    "pageName": "访客记录查询页",
+    "routePath": "/records",
+    "roleCode": "MANAGER",
+    "filePath": "screenshots/13_visit_record.png",
+    "description": "展示全校访客预约和访问记录查询。",
+    "reportSection": "查询页截图",
+    "captureTime": "2026-06-22T16:44:52.622Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "14_statistics",
+    "pageName": "统计报表页",
+    "routePath": "/reports",
+    "roleCode": "MANAGER",
+    "filePath": "screenshots/14_statistics.png",
+    "description": "展示访客趋势、部门排行、校门通行和审批通过率。",
+    "reportSection": "报表页截图",
+    "captureTime": "2026-06-22T16:44:54.136Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "15_user_manage",
+    "pageName": "用户管理页",
+    "routePath": "/system/users",
+    "roleCode": "ADMIN",
+    "filePath": "screenshots/15_user_manage.png",
+    "description": "展示系统用户管理。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:55.674Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "16_role_permission",
+    "pageName": "角色权限管理页",
+    "routePath": "/system/roles",
+    "roleCode": "ADMIN",
+    "filePath": "screenshots/16_role_permission.png",
+    "description": "展示角色权限管理。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:57.156Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "17_department_manage",
+    "pageName": "部门管理页",
+    "routePath": "/system/departments",
+    "roleCode": "ADMIN",
+    "filePath": "screenshots/17_department_manage.png",
+    "description": "展示部门基础数据维护。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:44:58.633Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "18_gate_manage",
+    "pageName": "校门管理页",
+    "routePath": "/system/gates",
+    "roleCode": "ADMIN",
+    "filePath": "screenshots/18_gate_manage.png",
+    "description": "展示校门基础数据维护。",
+    "reportSection": "模块界面截图",
+    "captureTime": "2026-06-22T16:45:00.107Z",
+    "status": "SUCCESS"
+  },
+  {
+    "screenshotCode": "19_system_log",
+    "pageName": "系统日志页",
+    "routePath": "/system/logs",
+    "roleCode": "ADMIN",
+    "filePath": "screenshots/19_system_log.png",
+    "description": "展示关键业务操作日志。",
+    "reportSection": "系统实现与测试",
+    "captureTime": "2026-06-22T16:45:01.584Z",
+    "status": "SUCCESS"
+  }
+]

@@ -60,3 +60,6 @@ venv/
 
 # Microsoft Office temporary files
 ~$*.docx
+
+# Local project tools
+project/.tools/
