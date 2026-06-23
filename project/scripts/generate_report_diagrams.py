@@ -125,6 +125,20 @@ class Canvas:
         self.draw.line(points + [points[0]], fill=color, width=3)
         self.centered_text((cx - w/2 + 10, cy - h/2 + 6, cx + w/2 - 10, cy + h/2 - 6), text, FONT_SM)
 
+    def diamond_port(self, center, w, h, target):
+        cx, cy = center
+        dx = target[0] - cx
+        dy = target[1] - cy
+        if abs(dx) * h >= abs(dy) * w:
+            return (cx + w / 2, cy) if dx >= 0 else (cx - w / 2, cy)
+        return (cx, cy + h / 2) if dy >= 0 else (cx, cy - h / 2)
+
+    def connect_relation(self, center, w, h, p1, p2, card1=None, card2=None, color=LINE):
+        port1 = self.diamond_port(center, w, h, p1)
+        port2 = self.diamond_port(center, w, h, p2)
+        self.line(p1, port1, label=card1, arrow=False, color=color)
+        self.line(port2, p2, label=card2, arrow=False, color=color)
+
     def line(self, p1, p2, label=None, label_at=0.5, color=LINE, width=3, arrow=True):
         self.draw.line((p1, p2), fill=color, width=width)
         if arrow:
@@ -274,11 +288,7 @@ def er_core_business():
     ]
     for name, center, p1, p2, card1, card2 in rels:
         c.relation(center, 150, 88, name)
-        c.line(p1, (center[0]-75, center[1]) if p1[0] < center[0] else (center[0], center[1]-44), label=card1, arrow=False)
-        end = (center[0]+75, center[1]) if p2[0] > center[0] else (center[0], center[1]+44)
-        if p2[1] < center[1]:
-            end = (center[0], center[1]-44)
-        c.line(end, p2, label=card2, arrow=False)
+        c.connect_relation(center, 150, 88, p1, p2, card1, card2)
     c.note((640, 1540, 2160, 1630), '说明：实体用名词表示，联系用动词表示；预约申请是核心业务实体。图中 1..1 表示必须参与，0..N 表示可选多次参与，0..1 表示可选一次参与。')
     return c.save('er_core_business')
 
@@ -310,8 +320,7 @@ def er_overview():
     ]
     for name, center, p1, p2, a, b in rels:
         c.relation(center, 145, 84, name)
-        c.line(p1, center, label=a, arrow=False)
-        c.line(center, p2, label=b, arrow=False)
+        c.connect_relation(center, 145, 84, p1, p2, a, b)
     c.note((520, 1180, 1880, 1260), '总体图仅保留主干实体和核心联系，用于说明访客预约、审批、通行、出入校和组织权限之间的整体约束。')
     return c.save('er_overview')
 
@@ -327,17 +336,13 @@ def er_user_permission():
     for box, title, attrs, color in entities.values():
         c.entity(box, title, attrs, color)
     c.relation((570, 610), 150, 88, '包含')
-    c.line((430,610),(495,610),label='1..1',arrow=False)
-    c.line((645,610),(720,610),label='0..N',arrow=False)
+    c.connect_relation((570, 610), 150, 88, (430,610), (720,610), '1..1', '0..N')
     c.relation((1180, 445), 150, 88, '分配')
-    c.line((1050,610),(1180,489),label='0..N',arrow=False)
-    c.line((1180,401),(1320,340),label='0..N',arrow=False)
+    c.connect_relation((1180, 445), 150, 88, (1050,610), (1320,340), '0..N', '0..N')
     c.relation((1180, 820), 150, 88, '授权')
-    c.line((1485,450),(1180,776),label='0..N',arrow=False)
-    c.line((1180,864),(1320,895),label='0..N',arrow=False)
+    c.connect_relation((1180, 820), 150, 88, (1485,450), (1320,895), '0..N', '0..N')
     c.relation((1860, 610), 150, 88, '父子权限')
-    c.line((1650,895),(1785,610),label='0..N 子权限',arrow=False)
-    c.line((1935,610),(1650,895),label='0..1 父权限',arrow=False)
+    c.connect_relation((1860, 610), 150, 88, (1650,895), (1650,895), '0..N 子权限', '0..1 父权限')
     c.note((760, 1060, 1660, 1135), '说明：用户与角色、角色与权限均为 M:N 联系，逻辑结构中分别转换为 sys_user_role 和 sys_role_permission。')
     return c.save('er_user_permission')
 
@@ -363,8 +368,7 @@ def er_system_support():
         ('包含', (940,990), (820,990), (1060,990), '1..1', '0..N'),
     ]:
         c.relation(center, 150, 88, name)
-        c.line(p1, center, label=a, arrow=False)
-        c.line(center, p2, label=b, arrow=False)
+        c.connect_relation(center, 150, 88, p1, p2, a, b)
     c.note((560, 1120, 1640, 1190), '说明：支撑实体不参与预约主流程，但用于消息提醒、操作审计、字典维护、截图留痕和报告生成记录。')
     return c.save('er_system_support')
 
@@ -460,24 +464,82 @@ def system_architecture():
 
 
 def table_relation():
-    c = Canvas(2400, 1450, '数据库表关系图')
-    tables = [
-        ('department', (130,220,420,300)), ('sys_user', (130,360,420,440)), ('sys_role', (130,500,420,580)), ('sys_permission', (130,640,420,720)),
-        ('sys_user_role', (520,430,830,510)), ('sys_role_permission', (520,610,860,690)),
-        ('visitor', (1040,220,1320,300)), ('visitor_vehicle', (1040,390,1320,470)), ('visit_apply', (1040,570,1320,650)), ('visitor_companion', (1040,750,1320,830)),
-        ('approval_record', (1440,570,1760,650)), ('pass_code', (1440,750,1760,830)), ('access_record', (1440,930,1760,1010)), ('campus_gate', (1900,930,2180,1010)), ('blacklist', (1040,930,1320,1010)),
-        ('notice', (520,1020,830,1100)), ('operation_log', (520,1160,830,1240)), ('dict_type', (1040,1160,1320,1240)), ('dict_item', (1440,1160,1760,1240)),
-    ]
-    pos = {}
-    for name, box in tables:
-        pos[name]=box
-        c.process(box, name)
-    def mid(name):
-        b=pos[name]; return ((b[0]+b[2])//2,(b[1]+b[3])//2)
-    links = [('department','sys_user'),('sys_user','sys_user_role'),('sys_role','sys_user_role'),('sys_role','sys_role_permission'),('sys_permission','sys_role_permission'),('visitor','visitor_vehicle'),('visitor','visit_apply'),('visitor_vehicle','visit_apply'),('visit_apply','visitor_companion'),('visit_apply','approval_record'),('visit_apply','pass_code'),('visit_apply','access_record'),('pass_code','access_record'),('visitor','blacklist'),('campus_gate','access_record'),('sys_user','notice'),('sys_user','operation_log'),('dict_type','dict_item')]
-    for a,b in links:
-        c.line(mid(a), mid(b), arrow=False, width=2, color='#64748b')
-    c.note((620,1340,1780,1400),'说明：表关系图属于逻辑结构补充，用于展示主外键依赖；概念 E-R 图以实体和联系为主。')
+    c = Canvas(2600, 1600, '数据库表关系图')
+
+    def group(box, title):
+        x1, y1, x2, y2 = box
+        c.draw.rounded_rectangle(box, radius=24, fill='#ffffff', outline='#cbd5e1', width=2)
+        c.draw.text((x1 + 24, y1 + 16), title, fill=MUTED, font=FONT_BOLD)
+
+    def box(name, xy):
+        c.process(xy, name)
+        return xy
+
+    def center(b):
+        return ((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)
+
+    def right(b):
+        return (b[2], (b[1] + b[3]) / 2)
+
+    def left(b):
+        return (b[0], (b[1] + b[3]) / 2)
+
+    def top(b):
+        return ((b[0] + b[2]) / 2, b[1])
+
+    def bottom(b):
+        return ((b[0] + b[2]) / 2, b[3])
+
+    group((80, 150, 2520, 500), '权限基础表关系')
+    department = box('department', (150, 270, 410, 340))
+    sys_user = box('sys_user', (520, 270, 780, 340))
+    sys_user_role = box('sys_user_role', (900, 270, 1190, 340))
+    sys_role = box('sys_role', (1310, 270, 1570, 340))
+    sys_role_permission = box('sys_role_permission', (1690, 270, 2030, 340))
+    sys_permission = box('sys_permission', (2150, 270, 2450, 340))
+    c.line(right(department), left(sys_user), label='department_id', arrow=False)
+    c.line(right(sys_user), left(sys_user_role), label='user_id', arrow=False)
+    c.line(right(sys_user_role), left(sys_role), label='role_id', arrow=False)
+    c.line(right(sys_role), left(sys_role_permission), label='role_id', arrow=False)
+    c.line(right(sys_role_permission), left(sys_permission), label='permission_id', arrow=False)
+
+    group((80, 560, 2520, 1060), '访客预约与通行业务表关系')
+    visitor = box('visitor', (150, 740, 410, 810))
+    visitor_vehicle = box('visitor_vehicle', (520, 640, 850, 710))
+    visit_apply = box('visit_apply', (520, 840, 850, 910))
+    blacklist = box('blacklist', (150, 940, 410, 1010))
+    companion = box('visitor_companion', (1000, 640, 1350, 710))
+    approval = box('approval_record', (1000, 840, 1350, 910))
+    pass_code = box('pass_code', (1000, 940, 1350, 1010))
+    access = box('access_record', (1510, 940, 1840, 1010))
+    gate = box('campus_gate', (2050, 940, 2350, 1010))
+
+    c.line(right(visitor), left(visitor_vehicle), label='visitor_id', arrow=False)
+    c.line(right(visitor), left(visit_apply), label='visitor_id', arrow=False)
+    c.line(bottom(visitor), top(blacklist), label='visitor_id', arrow=False)
+    c.poly([bottom(visitor_vehicle), (685, 775), (520, 875)], label='vehicle_id', arrow=False, color='#64748b')
+    c.line(right(visit_apply), left(companion), label='apply_id', arrow=False)
+    c.line(right(visit_apply), left(approval), label='apply_id', arrow=False)
+    c.poly([right(visit_apply), (920, 875), (920, 975), left(pass_code)], label='apply_id', arrow=False, color='#64748b')
+    c.line(right(pass_code), left(access), label='pass_code_id', arrow=False)
+    c.poly([right(visit_apply), (1420, 875), (1420, 975), left(access)], label='apply_id', arrow=False, color='#64748b')
+    c.line(right(access), left(gate), label='entry/exit_gate_id', arrow=False)
+
+    group((80, 1120, 2520, 1480), '系统支撑表关系')
+    user_ref = box('sys_user', (150, 1260, 410, 1330))
+    notice = box('notice', (560, 1180, 820, 1250))
+    operation_log = box('operation_log', (560, 1340, 870, 1410))
+    screenshot_record = box('screenshot_record', (1020, 1180, 1380, 1250))
+    report_record = box('report_record', (1020, 1340, 1360, 1410))
+    dict_type = box('dict_type', (1640, 1260, 1900, 1330))
+    dict_item = box('dict_item', (2100, 1260, 2360, 1330))
+    c.line(right(user_ref), left(notice), label='receiver_user_id', arrow=False)
+    c.line(right(user_ref), left(operation_log), label='operator_user_id', arrow=False)
+    c.line(right(user_ref), left(screenshot_record), label='created_by', arrow=False)
+    c.line(right(user_ref), left(report_record), label='generated_by', arrow=False)
+    c.line(right(dict_type), left(dict_item), label='type_id', arrow=False)
+
+    c.note((650, 1500, 1960, 1560), '说明：表关系图用于展示逻辑结构中的主外键依赖；为减少交叉线，按权限基础、访客业务和系统支撑三个区域分组展示。')
     return c.save('table_relation')
 
 
