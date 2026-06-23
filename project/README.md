@@ -1,6 +1,6 @@
 # 重庆邮电大学智慧访客预约与出入校管理系统
 
-本项目是数据库原理课程设计大作业，主题为“重庆邮电大学智慧访客预约与出入校管理系统”。系统围绕校外访客预约、校内被访人确认、部门审批、通行凭证生成、门岗核验、入校登记、离校登记、访问记录归档、黑名单拦截和统计报表分析等流程，完成数据库设计、前后端实现、自动截图和课程设计报告自动生成。
+本项目是数据库原理课程设计大作业，主题为“重庆邮电大学智慧访客预约与出入校管理系统”。系统围绕访客预约、黑名单检查、被访人确认、部门审批、通行凭证生成、门岗核验、入校登记、离校登记、访问记录归档、统计报表和课程报告生成等流程建设，形成一个包含数据库设计、后端接口、前端页面、自动截图和 LaTeX 报告的完整可运行数据库应用。
 
 ## 技术栈
 
@@ -8,10 +8,10 @@
 |---|---|
 | 前端 | Vue 3、Vite、Element Plus、Axios、Vue Router、ECharts |
 | 后端 | Spring Boot 3、MyBatis Plus、Spring Security、JWT、Swagger/OpenAPI |
-| 数据库 | MySQL 8，InnoDB，utf8mb4 |
-| 自动截图 | Playwright，系统 Chrome 兜底 |
-| 报告生成 | Markdown、Mermaid、Python、python-docx |
-| 构建运行 | JDK 17、Maven 3.9+、Node.js/npm |
+| 数据库 | MySQL 8、InnoDB、utf8mb4 |
+| 自动截图 | Playwright、系统 Chrome/Chromium |
+| 报告 | LaTeX、XeLaTeX、ctex、listings、longtable |
+| 自动化脚本 | Bash、Node.js、Python |
 
 ## 目录结构
 
@@ -23,27 +23,20 @@ project/
 │   ├── create_database.sql
 │   ├── schema.sql
 │   ├── seed.sql
+│   ├── demo_seed.sql
 │   ├── query_examples.sql
 │   └── table_design.md
-├── diagrams/                        Mermaid 设计图源码
-├── docs/                            课程设计文档、报告、运行说明
-│   ├── report_parts/
-│   ├── 重庆邮电大学访客管理系统设计报告.md
-│   ├── 重庆邮电大学访客管理系统设计报告.docx
-│   ├── API接口说明.md
-│   ├── 系统测试说明.md
-│   ├── 测试用例.md
-│   ├── 运行说明.md
-│   ├── 提交说明.md
-│   └── 最终检查清单.md
-├── screenshots/                     自动截图结果和 manifest
-├── scripts/                         自动化脚本
-│   ├── init_database.sh
-│   ├── run_backend.sh
-│   ├── run_frontend.sh
-│   ├── capture_screenshots.js
-│   ├── generate_report.py
-│   └── run_all.sh
+├── diagrams/                        Mermaid / Graphviz 设计图源文件
+├── docs/                            课程设计文档、说明和检查清单
+├── report-latex/                    LaTeX 课程设计报告
+│   ├── main.tex
+│   ├── main.pdf
+│   ├── chapters/
+│   ├── figures/
+│   ├── listings/
+│   └── styles/
+├── screenshots/                     自动截图结果和 manifest.json
+├── scripts/                         初始化、启动、截图和报告脚本
 ├── codex-skills/                    本项目复用的 Codex Skills
 ├── bug_fix_log.md
 ├── PROJECT_PLAN.md
@@ -53,27 +46,20 @@ project/
 
 ## 数据库初始化
 
-确保 MySQL 已启动，并默认存在 `root / root` 账号。进入 `project/` 后执行：
+确保 MySQL 已启动，并默认存在 `root / root` 账号。进入仓库根目录后执行：
 
 ```bash
+cd project
 bash scripts/init_database.sh
 ```
 
-脚本会依次执行：
-
-```text
-database/create_database.sql
-database/schema.sql
-database/seed.sql
-```
-
-可通过环境变量覆盖数据库连接：
+脚本会依次执行 `database/create_database.sql`、`database/schema.sql`、`database/seed.sql`。可通过环境变量覆盖数据库连接：
 
 ```bash
 DB_HOST=localhost DB_PORT=3306 DB_USERNAME=root DB_PASSWORD=root bash scripts/init_database.sh
 ```
 
-初始化后，演示数据包含 13 个系统用户、24 条预约申请、13 条出入校记录、4 条黑名单记录和 20 条操作日志，能够支撑全部核心页面和统计图表展示。
+当前演示数据已经过初始化验证：13 个部门、7 个校门、31 个系统用户、140 个访客、220 条预约申请、450 条审批记录、150 条通行凭证、125 条出入校记录、10 条黑名单、70 条车辆、90 条随行人员、360 条操作日志和 120 条通知消息。
 
 ## 后端启动
 
@@ -84,23 +70,13 @@ cd project
 bash scripts/run_backend.sh
 ```
 
-脚本会先执行 `mvn -DskipTests package`，然后运行：
+也可以直接打包验证：
 
 ```bash
-java -jar backend/target/cqupt-visitor-backend-0.1.0.jar
+mvn -f backend/pom.xml -DskipTests package
 ```
 
-后端默认地址：
-
-```text
-http://127.0.0.1:8080
-```
-
-Swagger 页面：
-
-```text
-http://127.0.0.1:8080/swagger-ui.html
-```
+后端默认地址为 `http://127.0.0.1:8080`，Swagger 页面为 `http://127.0.0.1:8080/swagger-ui.html`。
 
 ## 前端启动
 
@@ -111,13 +87,13 @@ cd project
 bash scripts/run_frontend.sh
 ```
 
-前端默认地址：
+也可以直接构建验证：
 
-```text
-http://127.0.0.1:5173/login
+```bash
+npm --prefix frontend run build
 ```
 
-前端接口代理配置位于 `frontend/vite.config.js`，开发环境通过 `/api` 代理到后端 `http://127.0.0.1:8080`。
+前端默认地址为 `http://127.0.0.1:5173/login`，开发环境通过 `/api` 代理到后端 `http://127.0.0.1:8080`。
 
 ## 自动截图
 
@@ -128,38 +104,39 @@ cd project
 node scripts/capture_screenshots.js
 ```
 
-也可以使用一键脚本自动启动后端和前端并截图：
+也可以使用一键脚本自动初始化数据库、启动服务、截图并生成报告：
 
 ```bash
 cd project
 bash scripts/run_all.sh
 ```
 
-截图会保存到 `screenshots/`，并生成 `screenshots/manifest.json`。当前已生成 19 张截图，包括登录页、首页驾驶舱、访客预约、我的预约、待确认、部门审批、门岗核验、入校登记、离校登记、当前在校、超时未离校、黑名单、访客记录、统计报表、用户管理、角色权限、部门管理、校门管理和系统日志。
+截图保存到 `screenshots/`，清单保存到 `screenshots/manifest.json`。当前已生成 19 张截图，覆盖登录页、首页驾驶舱、访客预约、我的预约、待确认、部门审批、门岗核验、入校登记、离校登记、当前在校、超时未离校、黑名单、访客记录、统计报表、用户管理、角色权限、部门管理、校门管理和系统日志。
 
-如果 Playwright Chromium 下载较慢，脚本会自动使用系统 Chrome；也可通过 `CHROME_PATH` 指定浏览器路径。
+## LaTeX 报告
 
-## 自动生成报告
+LaTeX 报告位于 `report-latex/`，最终 PDF 为：
 
-报告生成脚本会读取 `docs/report_parts/`、`docs/diagrams.md`、`database/`、`screenshots/`、`docs/API接口说明.md`、`docs/系统测试说明.md` 和 `docs/测试用例.md`。
+```text
+project/report-latex/main.pdf
+```
+
+重新生成 LaTeX 内容：
 
 ```bash
 cd project
-python scripts/generate_report.py
+python scripts/generate_latex_report.py
 ```
 
-输出文件：
-
-```text
-docs/重庆邮电大学访客管理系统设计报告.md
-docs/重庆邮电大学访客管理系统设计报告.docx
-```
-
-Word 导出依赖：
+编译 PDF：
 
 ```bash
-python -m pip install python-docx
+cd project/report-latex
+xelatex main.tex
+xelatex main.tex
 ```
+
+Windows 也可以执行 `build.bat`。报告结构严格对应数据库原理课程设计要求：系统定义、需求分析、系统设计、详细设计、系统实现与测试、总结。
 
 ## 测试账号
 
@@ -167,12 +144,12 @@ python -m pip install python-docx
 
 | 角色 | 账号 | 用途 |
 |---|---|---|
-| 系统管理员 | admin | 访问全部功能，维护用户、角色、部门、校门、黑名单、日志等 |
-| 访客 | visitor01 | 提交预约、查看我的预约和通行凭证 |
+| 系统管理员 | admin | 访问全部功能，维护用户、角色、部门、校门、黑名单和日志 |
 | 被访人 | teacher01 | 处理本人相关待确认预约 |
 | 部门审批人员 | approver01 | 审批本部门预约申请 |
 | 门岗安保人员 | guard01 | 门岗核验、入校登记、离校登记、当前在校和超时查询 |
 | 校级管理人员 | manager01 | 查看全校访客记录和统计报表 |
+| 访客 | visitor01 | 提交预约、查看预约状态和通行凭证 |
 
 ## 核心功能
 
@@ -185,38 +162,28 @@ python -m pip install python-docx
 - 门岗按预约编号、手机号、证件号或通行码核验。
 - 入校登记、离校登记、当前在校访客、超时未离校访客。
 - 用户、角色权限、部门、校门、字典、系统日志管理。
-- 今日访客、本周/本月访客、当前在校、超时未离校、部门排行、校门通行、访问趋势和审批通过率统计。
-- Playwright 自动截图和 Markdown/Word 报告自动生成。
+- 今日访客、本周访客、本月访客、当前在校、超时未离校、部门排行、校门通行、访问趋势和审批通过率统计。
+- Playwright 自动截图和 LaTeX 课程设计报告生成。
 
 ## 常见问题
 
-1. `mysql: command not found`  
-   将 MySQL Server 的 `bin` 目录加入 PATH，或使用已配置 PATH 的终端运行脚本。
+1. `mysql: command not found`：将 MySQL Server 的 `bin` 目录加入 PATH，或使用已配置 PATH 的终端运行脚本。
+2. 后端无法连接数据库：检查 MySQL 是否启动，确认 `DB_HOST`、`DB_PORT`、`DB_USERNAME`、`DB_PASSWORD` 是否正确。
+3. `mvn` 不可用：安装 Maven 3.9+，或使用项目本地 `project/.tools/apache-maven-3.9.9`。该目录被 `.gitignore` 忽略，不作为提交内容。
+4. 前端打开后接口 404 或 401：确认后端已启动，前端 `/api` 代理指向 `http://127.0.0.1:8080`，并使用正确账号登录。
+5. Playwright 无法下载 Chromium：可安装系统 Chrome，并通过 `CHROME_PATH` 指定浏览器路径。截图脚本已支持系统 Chrome 兜底。
+6. LaTeX 无法编译：安装 TeX Live 或 MiKTeX，确认 `xelatex` 可用。详见 `docs/LaTeX报告编译说明.md`。
 
-2. 后端无法连接数据库  
-   检查 MySQL 是否启动，确认 `DB_HOST`、`DB_PORT`、`DB_USERNAME`、`DB_PASSWORD` 是否正确。
-
-3. `mvn` 不可用  
-   安装 Maven 3.9+，或保留项目本地 `project/.tools/apache-maven-3.9.9`。该目录已被 `.gitignore` 忽略，不作为提交内容。
-
-4. 前端打开后接口 404 或 401  
-   确认后端已启动，前端 `/api` 代理指向 `http://127.0.0.1:8080`，并使用正确账号登录。
-
-5. Playwright 下载 Chromium 失败  
-   可安装系统 Chrome，并设置 `CHROME_PATH`。截图脚本已经支持系统 Chrome 兜底。
-
-6. Word 报告无法生成  
-   执行 `python -m pip install python-docx` 后重新运行 `python scripts/generate_report.py`。
-
-## 推荐提交流程
+## 推荐提交前验证流程
 
 ```bash
 cd project
 bash scripts/init_database.sh
 mvn -f backend/pom.xml -DskipTests package
-cd frontend && npm run build && cd ..
+npm --prefix frontend run build
 bash scripts/run_all.sh
-python scripts/generate_report.py
+python scripts/generate_latex_report.py
+cd report-latex && xelatex main.tex && xelatex main.tex
 ```
 
-执行完成后，确认 `docs/重庆邮电大学访客管理系统设计报告.md`、`docs/重庆邮电大学访客管理系统设计报告.docx`、`screenshots/manifest.json` 和 19 张截图均已生成。
+提交前重点确认 `database/`、`backend/`、`frontend/`、`diagrams/`、`screenshots/`、`scripts/`、`report-latex/`、`docs/`、`README.md` 和 `PROJECT_PLAN.md` 均存在，且 `report-latex/main.pdf` 已生成。

@@ -1,41 +1,32 @@
-# 重庆邮电大学访客管理系统
+# CQUPT Visitor Management System
 
-本仓库用于数据库原理期末大作业，项目主题为“重庆邮电大学访客管理系统”。系统计划覆盖访客预约、被访人确认、部门审批、门岗核验、入校登记、离校登记、黑名单管理、访客记录查询、统计报表和系统管理等功能。
-
-## 技术栈
-
-- 前端：Vue 3 + Element Plus + Axios + Vue Router
-- 后端：Spring Boot
-- 数据库：MySQL
-- 图表：Mermaid 或 PlantUML
-- 文档：Markdown，可后续转换为 Word
-
-## 当前内容
+本仓库用于数据库原理期末大作业，项目主题为“重庆邮电大学智慧访客预约与出入校管理系统”。完整项目位于：
 
 ```text
 project/
-  codex-skills/                 # 后续分阶段推进项目用的 Codex Skills
-  cqupt-db-course-skills.zip    # Skills 打包备份
-
-大作业文档基本要求.docx
-案例分析-连锁超市管理系统的分析与设计.pdf
 ```
 
-## 后续同步流程
+主要交付内容包括：
 
-每完成一个阶段后，建议执行：
+- `project/backend/`：Spring Boot 3 + MyBatis Plus 后端。
+- `project/frontend/`：Vue 3 + Vite + Element Plus 前端。
+- `project/database/`：MySQL 8 建库、建表、演示数据和典型查询脚本。
+- `project/diagrams/`：E-R 图、数据流程图、系统模块图、业务流程图和架构图。
+- `project/screenshots/`：Playwright 自动截图和 `manifest.json`。
+- `project/report-latex/`：LaTeX 课程设计报告，最终 PDF 为 `project/report-latex/main.pdf`。
+- `project/docs/`：需求、设计、API、测试、运行、提交和最终检查文档。
+
+推荐从 `project/README.md` 开始阅读和运行项目。
+
+## 快速验证
 
 ```bash
-git status
-git add .
-git commit -m "阶段说明"
-git push
+cd project
+bash scripts/init_database.sh
+mvn -f backend/pom.xml -DskipTests package
+npm --prefix frontend run build
+python scripts/generate_latex_report.py
+cd report-latex && xelatex main.tex && xelatex main.tex
 ```
 
-首次推送到 GitHub 前，需要先创建远端仓库并添加 `origin`：
-
-```bash
-git remote add origin <你的 GitHub 仓库地址>
-git push -u origin main
-```
-
+测试账号默认密码均为 `123456`：`admin`、`teacher01`、`approver01`、`guard01`、`manager01`、`visitor01`。

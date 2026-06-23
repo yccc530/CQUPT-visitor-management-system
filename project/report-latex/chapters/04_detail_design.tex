@@ -1,17 +1,13 @@
 \section{详细设计}
+\subsection{本章概述}
+详细设计重点说明系统如何通过 SQL 支撑核心业务查询和统计分析。以下查询围绕访客预约、审批流转、门岗通行、风险控制和统计报表展开，体现关系数据库在数据关联、聚合统计和状态筛选方面的设计作用。
 
-\subsection{SQL 查询语句和说明}
-
-本节列出系统课程设计报告中的典型 SQL 查询。SQL 均使用 MySQL 8 语法，并尽量使用动态日期，避免演示数据随时间变化后统计为空。
-
-\subsubsection{SQL-01：查询某访客的历史预约记录}
-
-\textbf{查询目的：}查询某访客的历史预约记录。\par
-
+\subsection{SQL-01 查询某访客的历史预约记录}
+\textbf{查询名称：}查询某访客的历史预约记录。\par
+\textbf{查询目的：}用于访客记录查询页，按手机号回溯访客所有历史预约，关联展示被访部门、被访人、预约状态和访问状态。\par
 \textbf{涉及数据表：}\texttt{visit\_apply, visitor, department, sys\_user}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT
   v.visitor_name,
   v.phone,
@@ -29,19 +25,15 @@ LEFT JOIN department d ON va.department_id = d.id
 LEFT JOIN sys_user u ON va.host_user_id = u.id
 WHERE va.deleted = 0 AND v.phone = '13950000001'
 ORDER BY va.plan_start_time DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-02：查询某被访人的待确认预约}
-
-\textbf{查询目的：}查询某被访人的待确认预约。\par
-
+\subsection{SQL-02 查询某被访人的待确认预约}
+\textbf{查询名称：}查询某被访人的待确认预约。\par
+\textbf{查询目的：}用于被访人端待确认列表，保证被访人只处理与本人账号相关的待确认预约。\par
 \textbf{涉及数据表：}\texttt{visit\_apply, visitor, sys\_user}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT va.apply_no, v.visitor_name, v.phone, va.visit_reason, va.plan_start_time, va.apply_status
 FROM visit_apply va
 JOIN visitor v ON va.visitor_id = v.id
@@ -50,19 +42,15 @@ WHERE va.deleted = 0
   AND host.username = 'teacher01'
   AND va.apply_status = 'PENDING_HOST'
 ORDER BY va.plan_start_time ASC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-03：查询某部门的待审批预约}
-
-\textbf{查询目的：}查询某部门的待审批预约。\par
-
+\subsection{SQL-03 查询某部门的待审批预约}
+\textbf{查询名称：}查询某部门的待审批预约。\par
+\textbf{查询目的：}用于部门审批页，筛选本部门已由被访人确认或进入部门审批阶段的预约申请。\par
 \textbf{涉及数据表：}\texttt{visit\_apply, visitor, department, sys\_user}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT va.apply_no, d.dept_name, v.visitor_name, host.real_name AS host_name, va.visit_reason, va.plan_start_time, va.apply_status
 FROM visit_apply va
 JOIN visitor v ON va.visitor_id = v.id
@@ -72,19 +60,15 @@ WHERE va.deleted = 0
   AND d.dept_name = '信息与通信工程学院'
   AND va.apply_status IN ('HOST_CONFIRMED', 'PENDING_DEPT')
 ORDER BY va.plan_start_time ASC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-04：查询当天已入校访客}
-
-\textbf{查询目的：}查询当天已入校访客。\par
-
+\subsection{SQL-04 查询当天已入校访客}
+\textbf{查询名称：}查询当天已入校访客。\par
+\textbf{查询目的：}用于门岗和统计页面，动态查询当天已经完成入校登记的访客。\par
 \textbf{涉及数据表：}\texttt{access\_record, visit\_apply, visitor, campus\_gate, sys\_user}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT ar.id, va.apply_no, v.visitor_name, v.phone, g.gate_name AS entry_gate, guard.real_name AS guard_name, ar.entry_time
 FROM access_record ar
 JOIN visit_apply va ON ar.apply_id = va.id
@@ -95,19 +79,15 @@ WHERE ar.deleted = 0
   AND ar.entry_time >= CURRENT_DATE()
   AND ar.entry_time < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
 ORDER BY ar.entry_time DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-05：查询当天已入校但未离校访客}
-
-\textbf{查询目的：}查询当天已入校但未离校访客。\par
-
+\subsection{SQL-05 查询当天已入校但未离校访客}
+\textbf{查询名称：}查询当天已入校但未离校访客。\par
+\textbf{查询目的：}用于当前在校访客页，查询当天已入校但尚未离校的访客记录。\par
 \textbf{涉及数据表：}\texttt{access\_record, visit\_apply, visitor, department}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT ar.id, va.apply_no, v.visitor_name, v.phone, d.dept_name, ar.entry_time, ar.access_status
 FROM access_record ar
 JOIN visit_apply va ON ar.apply_id = va.id
@@ -118,19 +98,15 @@ WHERE ar.deleted = 0
   AND ar.entry_time >= CURRENT_DATE()
   AND ar.entry_time < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
 ORDER BY ar.entry_time DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-06：查询超时未离校访客}
-
-\textbf{查询目的：}查询超时未离校访客。\par
-
+\subsection{SQL-06 查询超时未离校访客}
+\textbf{查询名称：}查询超时未离校访客。\par
+\textbf{查询目的：}用于超时未离校页面，结合访问状态与计划离校时间识别风险访客。\par
 \textbf{涉及数据表：}\texttt{access\_record, visit\_apply, visitor}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT va.apply_no, v.visitor_name, v.phone, va.plan_end_time, ar.entry_time, ar.overtime_flag, ar.abnormal_reason
 FROM access_record ar
 JOIN visit_apply va ON ar.apply_id = va.id
@@ -138,19 +114,15 @@ JOIN visitor v ON ar.visitor_id = v.id
 WHERE ar.deleted = 0
   AND (ar.access_status = 'OVERTIME' OR (ar.exit_time IS NULL AND va.plan_end_time < NOW()))
 ORDER BY va.plan_end_time ASC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-07：按部门统计本月访客数量}
-
-\textbf{查询目的：}按部门统计本月访客数量。\par
-
+\subsection{SQL-07 按部门统计本月访客数量}
+\textbf{查询名称：}按部门统计本月访客数量。\par
+\textbf{查询目的：}用于部门访客排行图表，按本月访问申请统计各部门接待量。\par
 \textbf{涉及数据表：}\texttt{visit\_apply, department}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT d.dept_name, COUNT(*) AS visitor_count
 FROM visit_apply va
 JOIN department d ON va.department_id = d.id
@@ -159,19 +131,15 @@ WHERE va.deleted = 0
   AND va.plan_start_time < DATE_ADD(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
 GROUP BY d.id, d.dept_name
 ORDER BY visitor_count DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-08：按校门统计本月通行数量}
-
-\textbf{查询目的：}按校门统计本月通行数量。\par
-
+\subsection{SQL-08 按校门统计本月通行数量}
+\textbf{查询名称：}按校门统计本月通行数量。\par
+\textbf{查询目的：}用于校门通行统计图表，分别统计本月各校门入校、离校和总通行次数。\par
 \textbf{涉及数据表：}\texttt{campus\_gate, access\_record}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT g.gate_name,
        SUM(CASE WHEN ar.entry_gate_id = g.id THEN 1 ELSE 0 END) AS entry_count,
        SUM(CASE WHEN ar.exit_gate_id = g.id THEN 1 ELSE 0 END) AS exit_count,
@@ -184,112 +152,74 @@ LEFT JOIN access_record ar ON ar.deleted = 0
 WHERE g.deleted = 0
 GROUP BY g.id, g.gate_name
 ORDER BY total_count DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-09：查询黑名单访客}
-
-\textbf{查询目的：}查询黑名单访客。\par
-
+\subsection{SQL-09 查询黑名单访客}
+\textbf{查询名称：}查询黑名单访客。\par
+\textbf{查询目的：}用于黑名单管理和预约风险检查，展示仍处于生效状态的限制入校人员。\par
 \textbf{涉及数据表：}\texttt{blacklist, visitor}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT b.id, v.visitor_name, b.phone, b.id_number, b.reason, b.level, b.status, b.start_time, b.end_time
 FROM blacklist b
 LEFT JOIN visitor v ON b.visitor_id = v.id
 WHERE b.deleted = 0 AND b.status = 'ACTIVE'
 ORDER BY b.level DESC, b.start_time DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-10：查询某预约的完整审批记录}
-
-\textbf{查询目的：}查询某预约的完整审批记录。\par
-
+\subsection{SQL-10 查询某预约的完整审批记录}
+\textbf{查询名称：}查询某预约的完整审批记录。\par
+\textbf{查询目的：}用于预约详情页，按审批顺序展示某个预约的完整审批链路。\par
 \textbf{涉及数据表：}\texttt{approval\_record, visit\_apply, sys\_user}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT va.apply_no, ar.approval_step, approver.real_name AS approver_name, ar.approval_result, ar.approval_comment, ar.approval_time
 FROM approval_record ar
 JOIN visit_apply va ON ar.apply_id = va.id
 LEFT JOIN sys_user approver ON ar.approver_user_id = approver.id
 WHERE ar.deleted = 0 AND va.apply_no = (SELECT apply_no FROM visit_apply ORDER BY id LIMIT 1)
 ORDER BY ar.sort_order ASC, ar.approval_time ASC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-11：查询某访客的车辆和随行人员}
-
-\textbf{查询目的：}查询某访客的车辆和随行人员。\par
-
+\subsection{SQL-11 查询某访客的车辆和随行人员}
+\textbf{查询名称：}查询某访客的车辆和随行人员。\par
+\textbf{查询目的：}用于预约详情页，联合展示车辆和随行人员信息。\par
 \textbf{涉及数据表：}\texttt{visit\_apply, visitor, visitor\_vehicle, visitor\_companion}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT va.apply_no, v.visitor_name, vv.plate_no, vv.vehicle_type, vv.color, vc.companion_name, vc.phone AS companion_phone, vc.relation_remark
 FROM visit_apply va
 JOIN visitor v ON va.visitor_id = v.id
 LEFT JOIN visitor_vehicle vv ON va.vehicle_id = vv.id
 LEFT JOIN visitor_companion vc ON vc.apply_id = va.id AND vc.deleted = 0
 WHERE va.deleted = 0 AND va.id = 2;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-12：查询系统操作日志}
-
-\textbf{查询目的：}查询系统操作日志。\par
-
-\textbf{涉及数据表：}\texttt{operation\_log}。\par
-
-\begin{lstlisting}[style=sqlstyle]
-
-SELECT operator_name, module_name, operation_type, request_method, request_url, operation_result, ip_address, operation_time
-FROM operation_log
-WHERE deleted = 0
-ORDER BY operation_time DESC
-LIMIT 20;
-
-\end{lstlisting}
-
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-13：查询今日访客概览}
-
-\textbf{查询目的：}查询今日访客概览。\par
-
+\subsection{SQL-13 查询今日访客概览}
+\textbf{查询名称：}查询今日访客概览。\par
+\textbf{查询目的：}用于首页驾驶舱，汇总今日访客、当前在校、超时未离校、待审批和黑名单风险。\par
 \textbf{涉及数据表：}\texttt{visit\_apply, access\_record, blacklist}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT
   (SELECT COUNT(*) FROM visit_apply WHERE deleted = 0 AND plan_start_time >= CURRENT_DATE() AND plan_start_time < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)) AS today_visitors,
   (SELECT COUNT(*) FROM access_record WHERE deleted = 0 AND access_status = 'ENTERED') AS current_visitors,
   (SELECT COUNT(*) FROM access_record WHERE deleted = 0 AND access_status = 'OVERTIME') AS overtime_visitors,
   (SELECT COUNT(*) FROM visit_apply WHERE deleted = 0 AND apply_status IN ('PENDING_HOST','HOST_CONFIRMED','PENDING_DEPT')) AS pending_approvals,
   (SELECT COUNT(*) FROM blacklist WHERE deleted = 0 AND status = 'ACTIVE') AS blacklist_risks;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-14：查询近七天访客趋势}
-
-\textbf{查询目的：}查询近七天访客趋势。\par
-
+\subsection{SQL-14 查询近七天访客趋势}
+\textbf{查询名称：}查询近七天访客趋势。\par
+\textbf{查询目的：}用于近七天访客趋势图，使用递归日期表保证没有访问的日期也能显示为 0。\par
 \textbf{涉及数据表：}\texttt{days, visit\_apply}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 WITH RECURSIVE days AS (
   SELECT DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AS stat_date
   UNION ALL
@@ -303,19 +233,15 @@ LEFT JOIN visit_apply va ON va.deleted = 0
   AND va.plan_start_time < DATE_ADD(days.stat_date, INTERVAL 1 DAY)
 GROUP BY days.stat_date
 ORDER BY days.stat_date;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-15：查询审批通过率}
-
-\textbf{查询目的：}查询审批通过率。\par
-
+\subsection{SQL-15 查询审批通过率}
+\textbf{查询名称：}查询审批通过率。\par
+\textbf{查询目的：}用于审批通过率统计，计算部门审批通过、拒绝/退回、待处理数量和通过率。\par
 \textbf{涉及数据表：}\texttt{approval\_record}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT
   SUM(CASE WHEN approval_result = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count,
   SUM(CASE WHEN approval_result IN ('REJECTED','RETURNED') THEN 1 ELSE 0 END) AS rejected_count,
@@ -323,55 +249,15 @@ SELECT
   ROUND(SUM(CASE WHEN approval_result = 'APPROVED' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS pass_rate
 FROM approval_record
 WHERE deleted = 0 AND approval_step = 'DEPT_APPROVAL';
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-16：查询本周访客数}
-
-\textbf{查询目的：}查询本周访客数。\par
-
+\subsection{SQL-18 访问事由分布}
+\textbf{查询名称：}访问事由分布。\par
+\textbf{查询目的：}用于访问事由分布图，通过关键词归类展示家长、企业合作、后勤维修、学术交流等访问目的。\par
 \textbf{涉及数据表：}\texttt{visit\_apply}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
-SELECT COUNT(*) AS this_week_visitors
-FROM visit_apply
-WHERE deleted = 0
-  AND plan_start_time >= DATE_SUB(CURRENT_DATE(), INTERVAL WEEKDAY(CURRENT_DATE()) DAY)
-  AND plan_start_time < DATE_ADD(DATE_SUB(CURRENT_DATE(), INTERVAL WEEKDAY(CURRENT_DATE()) DAY), INTERVAL 7 DAY);
-
-\end{lstlisting}
-
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-17：查询本月访客数}
-
-\textbf{查询目的：}查询本月访客数。\par
-
-\textbf{涉及数据表：}\texttt{visit\_apply}。\par
-
-\begin{lstlisting}[style=sqlstyle]
-
-SELECT COUNT(*) AS this_month_visitors
-FROM visit_apply
-WHERE deleted = 0
-  AND plan_start_time >= DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
-  AND plan_start_time < DATE_ADD(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01'), INTERVAL 1 MONTH);
-
-\end{lstlisting}
-
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-18：访问事由分布}
-
-\textbf{查询目的：}访问事由分布。\par
-
-\textbf{涉及数据表：}\texttt{visit\_apply}。\par
-
-\begin{lstlisting}[style=sqlstyle]
-
 SELECT reason_type, COUNT(*) AS reason_count
 FROM (
   SELECT CASE
@@ -392,87 +278,68 @@ FROM (
 ) t
 GROUP BY reason_type
 ORDER BY reason_count DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-19：审批状态分布}
-
-\textbf{查询目的：}审批状态分布。\par
-
+\subsection{SQL-19 审批状态分布}
+\textbf{查询名称：}审批状态分布。\par
+\textbf{查询目的：}用于审批状态分布图，展示预约在待确认、审批通过、审批拒绝、取消等状态上的数量。\par
 \textbf{涉及数据表：}\texttt{visit\_apply}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT apply_status, COUNT(*) AS status_count
 FROM visit_apply
 WHERE deleted = 0
 GROUP BY apply_status
 ORDER BY status_count DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-20：入校离校状态分布}
-
-\textbf{查询目的：}入校离校状态分布。\par
-
+\subsection{SQL-20 入校离校状态分布}
+\textbf{查询名称：}入校离校状态分布。\par
+\textbf{查询目的：}用于入校离校状态分布图，统计未入校、已入校、已离校、超时未离校等访问状态。\par
 \textbf{涉及数据表：}\texttt{visit\_apply}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT access_status, COUNT(*) AS status_count
 FROM visit_apply
 WHERE deleted = 0
 GROUP BY access_status
 ORDER BY status_count DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-21：黑名单风险数量}
-
-\textbf{查询目的：}黑名单风险数量。\par
-
+\subsection{SQL-21 黑名单风险数量}
+\textbf{查询名称：}黑名单风险数量。\par
+\textbf{查询目的：}用于黑名单风险分析，按风险级别和状态统计风险数量。\par
 \textbf{涉及数据表：}\texttt{blacklist}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT level, status, COUNT(*) AS risk_count
 FROM blacklist
 WHERE deleted = 0
 GROUP BY level, status
 ORDER BY risk_count DESC;
-
 \end{lstlisting}
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
-
-\subsubsection{SQL-22：最近操作日志}
-
-\textbf{查询目的：}最近操作日志。\par
-
+\subsection{SQL-22 最近操作日志}
+\textbf{查询名称：}最近操作日志。\par
+\textbf{查询目的：}用于系统日志页，展示最近关键操作记录，支撑系统审计。\par
 \textbf{涉及数据表：}\texttt{operation\_log}。\par
-
+\textbf{SQL 语句：}
 \begin{lstlisting}[style=sqlstyle]
-
 SELECT operator_name, module_name, operation_type, operation_result, request_url, operation_time
 FROM operation_log
 WHERE deleted = 0
 ORDER BY operation_time DESC
 LIMIT 10;
-
 \end{lstlisting}
-
-查询结果用于支撑页面列表、门岗核验、统计报表或课程设计报告中的数据说明。
+\textbf{查询说明：}该查询与系统页面、后端统计接口或课程设计报告中的业务说明保持一致，能够直接基于当前数据库脚本执行。
 
 \subsection{建表 SQL 摘要}
-
+数据库建表设计在主键、外键、索引、状态字段和时间字段上保持统一规范。以下摘要展示核心建表语句的结构特征，用于说明物理实现与逻辑结构设计之间的对应关系。
 \begin{lstlisting}[style=sqlstyle]
-
 ﻿-- 重庆邮电大学智慧访客预约与出入校管理系统
 -- MySQL 8 schema script
 
@@ -653,45 +520,4 @@ CREATE TABLE sys_role_permission (
   permission_id BIGINT NOT NULL COMMENT '权限编号',
   create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_role_permission (role_id, permission_id),
-  KEY idx_role_permission_permission (permission_id),
-  CONSTRAINT fk_role_permission_role FOREIGN KEY (role_id) REFERENCES sys_role(id) ON DELETE CASCADE,
-  CONSTRAINT fk_role_permission_permission FOREIGN KEY (permission_id) REFERENCES sys_permission(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色权限关联表';
-
-CREATE TABLE visitor_vehicle (
-  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '车辆主键',
-  visitor_id BIGINT NOT NULL COMMENT '访客编号',
-  plate_no VARCHAR(20) NOT NULL COMMENT '车牌号',
-  vehicle_type VARCHAR(30) NOT NULL DEFAULT 'CAR' COMMENT '车辆类型',
-  color VARCHAR(30) NULL COMMENT '车辆颜色',
-  brand VARCHAR(50) NULL COMMENT '品牌',
-  status VARCHAR(30) NOT NULL DEFAULT 'NORMAL' COMMENT '车辆状态',
-  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标记',
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_vehicle_plate (plate_no),
-  KEY idx_vehicle_visitor (visitor_id),
-  CONSTRAINT fk_vehicle_visitor FOREIGN KEY (visitor_id) REFERENCES visitor(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='访客车辆表';
-
-CREATE TABLE visit_apply (
-  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '预约主键',
-  apply_no VARCHAR(50) NOT NULL COMMENT '预约编号',
-  visitor_id BIGINT NOT NULL COMMENT '访客编号',
-  host_user_id BIGINT NOT NULL COMMENT '被访人编号',
-  department_id BIGINT NOT NULL COMMENT '访问部门编号',
-  vehicle_id BIGINT NULL COMMENT '车辆编号',
-  visit_reason VARCHAR(255) NOT NULL COMMENT '来访事由',
-  plan_start_time DATETIME NOT NULL COMMENT '计划开始时间',
-  plan_end_time DATETIME NOT NULL COMMENT '计划结束时间',
-  apply_status VARCHAR(30) NOT NULL DEFAULT 'PENDING_HOST' COMMENT '预约状态',
-  access_status VARCHAR(30) NOT NULL DEFAULT 'NOT_ENTERED' COMMENT '通行状态',
-  companion_count INT NOT NULL DEFAULT 0 COMMENT '随行人数',
-  submit_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
-  cancel_time DATETIME NULL COMMENT '取消时间',
-
 \end{lstlisting}
